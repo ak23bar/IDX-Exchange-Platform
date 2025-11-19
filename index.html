@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>California Property Finder | Akbar Aman</title>
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1946/1946436.png">
+  <style>
+    /* ========== GLOBAL RESET ========== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(160deg, #0b132b, #1c2541);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 20px;
+    }
+
+    /* ========== HERO CONTENT ========== */
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #60a5fa, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.05rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    code {
+      background: rgba(148, 163, 184, 0.15);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+    }
+
+    /* ========== BUTTON ========== */
+    .button {
+      display: inline-block;
+      background: #3b82f6;
+      color: #ffffff;
+      padding: 14px 30px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+    }
+
+    .button:hover {
+      background: #2563eb;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+    }
+
+    /* ========== FOOTER ========== */
+    footer {
+      position: fixed;
+      bottom: 20px;
+      font-size: 0.85rem;
+      color: #64748b;
+      text-align: center;
+      width: 100%;
+    }
+    footer span {
+      color: #94a3b8;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 600px) {
+      h1 { font-size: 1.7rem; }
+      p { font-size: 0.95rem; }
+      .button { padding: 12px 26px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>California Property Finder</h1>
+    <p>
+      Welcome to <strong>Akbar’s IDX Exchange Initiative</strong> — a modern real estate search tool built as apart of the <strong>SD6 Team</strong>.<br>
+      Use the property search engine to explore California homes, filter listings, and view details powered by live data from
+      <code>boxgra6_cali</code>.
+    </p>
+    <a href="search.php" class="button">Launch Property Search</a>
+  </main>
+
+  <footer>
+    © 2025 <span>Akbar Aman</span> • SD6 Team | Built with PHP + MySQL | <span>IDX Exchange Initiative</span>
+  </footer>
+</body>
+</html>

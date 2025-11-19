@@ -1,0 +1,291 @@
+/* ===============================
+   California Property Finder (SD6)
+   Frontend Stylesheet — Akbar Aman
+   =============================== */
+
+/* Base Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Containers */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Header */
+.header {
+  padding: 30px 0;
+  border-bottom: 1px solid #1e293b;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: #ffffff;
+}
+
+.header p {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-top: 8px;
+}
+
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  background: #1a2332;
+  border: 1px solid #2d3748;
+  border-radius: 10px;
+  padding: 20px;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 160px;
+  min-width: 160px;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.filter-group input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  transition: border 0.2s ease;
+}
+
+.filter-group input:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+/* Search Button */
+.search-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 22px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1 1 140px;
+  min-width: 140px;
+  transition: all 0.2s ease;
+}
+
+.search-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+.search-btn:active {
+  transform: translateY(0);
+}
+
+/* Results Info */
+.results-count {
+  font-size: 1rem;
+  color: #cbd5e1;
+  margin-top: 10px;
+}
+
+.results-count strong {
+  color: #ffffff;
+}
+
+/* Property Results Container */
+.results-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+/* Property Card */
+.property-card {
+  background: #1a2332;
+  border: 1px solid #2d3748;
+  border-radius: 10px;
+  overflow: hidden;
+  flex: 1 1 280px;
+  max-width: 31%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+}
+
+.property-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.property-image {
+  height: 200px;
+  width: 100%;
+  overflow: hidden;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.property-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.property-card:hover .property-image img {
+  transform: scale(1.04);
+}
+
+.property-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.property-price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.property-address {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
+.property-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.property-specs span {
+  background: rgba(59, 130, 246, 0.15);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.pagination a,
+.pagination span {
+  color: #e2e8f0;
+  text-decoration: none;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.pagination a:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.pagination .active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  border-top: 1px solid #1e293b;
+  padding: 25px 0;
+  margin-top: 40px;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 1024px) {
+  .property-card {
+    flex: 1 1 45%;
+    max-width: 48%;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-btn {
+    width: 100%;
+  }
+
+  .property-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .property-image {
+    height: 180px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Subtle Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

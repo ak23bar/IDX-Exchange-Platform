@@ -1,0 +1,96 @@
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment & Configuration
+.env
+.env.local
+.env.production
+config.php
+secrets.php
+.idx_secrets.php
+
+# Database
+*.sql.gz
+*.sql
+database_backup/
+migrations/backup/
+
+# Logs
+*.log
+logs/
+error_log
+access_log
+/var/log/
+
+# Dependencies
+vendor/
+node_modules/
+composer.lock
+package-lock.json
+
+# PHP
+*.cache
+.phpunit.result.cache
+phpunit.xml
+
+# Temporary files
+tmp/
+temp/
+cache/
+*.tmp
+
+# Credentials & Keys
+*.pem
+*.key
+*.crt
+*.p12
+credentials.json
+token.json
+
+# OS
+Thumbs.db
+desktop.ini
+.Spotlight-V100
+.Trashes
+
+# Backup files
+*.bak
+*.backup
+*.old
+*_backup
+
+# cPanel specific
+.cpanel/
+.htpasswds/
+.lastlogin
+.ftpquota
+
+# Session files
+sessions/
+/tmp/sess_*
+
+# Uploads (if applicable)
+uploads/*
+!uploads/.gitkeep
+
+# Compiled/minified
+*.min.js
+*.min.css
+dist/
+build/
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+nbproject/
+.project
+.settings/
+
+# API response cache
+api_cache/
+*.cache.json
