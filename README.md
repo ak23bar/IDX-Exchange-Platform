@@ -1,6 +1,6 @@
 # 🏠 Full-Stack MLS Property Platform
 
-> **Pro-bono Real Estate Search Platform** | Built by SD6 Team @ IDXExchange  
+> **Pro-bono Real Estate Search Platform** | Built with SD6 Team @ IDXExchange  
 > *Fall 2025 Cohort - Software Development Internship*
 
 [![PHP](https://img.shields.io/badge/PHP-7.2+-777BB4?style=flat&logo=php&logoColor=white)](https://www.php.net/)
