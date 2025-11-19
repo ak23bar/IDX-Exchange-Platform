@@ -15,7 +15,8 @@ A sophisticated full-stack real estate platform engineered to integrate live MLS
 **Team Lead:** Akbar Aman  
 **Team:** SD6 (6 members)  
 **Organization:** IDXExchange  
-**Project Status:** Active Development
+**Project Status:** Active Development  
+**Live Demo:** [https://akbar.califorsale.org/search.php](https://akbar.califorsale.org/search.php)
 
 ---
 
@@ -379,7 +380,7 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file
 Team Lead, SD6 @ IDXExchange  
 📧 Email: [your.email@example.com]  
 🔗 LinkedIn: [linkedin.com/in/yourprofile]  
-🌐 Live Demo: [https://yourdomain.com]
+🌐 Live Demo: [https://akbar.califorsale.org/search.php](https://akbar.califorsale.org/search.php)
 
 ---
 
