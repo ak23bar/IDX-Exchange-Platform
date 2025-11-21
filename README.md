@@ -23,6 +23,8 @@ A sophisticated full-stack real estate platform engineered to integrate live MLS
 ## ✨ Key Features
 
 ### 🔍 Advanced Search & Filtering
+- **Natural Language Search** ✨ AI-powered query parsing (e.g., "3 bedroom house in LA under 800k")
+- **Smart property recommendations** based on viewing history and search patterns
 - **Multi-criteria filtering**: City, ZIP code, price range, bedrooms, bathrooms, square footage
 - **Real-time search** with dynamic query building
 - **Sort capabilities**: Price, size, date updated (ascending/descending)

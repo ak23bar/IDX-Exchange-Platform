@@ -61,10 +61,13 @@ try {
 }
 
 // -------------------------
-// 3) Handle Favorites
+// 3) Handle Favorites & Viewed Properties
 // -------------------------
 if (!isset($_SESSION['favorites'])) {
   $_SESSION['favorites'] = [];
+}
+if (!isset($_SESSION['viewed_properties'])) {
+  $_SESSION['viewed_properties'] = [];
 }
 if (isset($_GET['toggle_fav'])) {
   $lid = $_GET['toggle_fav'];
@@ -77,18 +80,34 @@ if (isset($_GET['toggle_fav'])) {
   exit;
 }
 
+// Track property views when modal is viewed
+if (isset($_GET['view_property'])) {
+  $lid = $_GET['view_property'];
+  if (!in_array($lid, $_SESSION['viewed_properties'])) {
+    $_SESSION['viewed_properties'][] = $lid;
+    // Keep only last 20 viewed properties
+    if (count($_SESSION['viewed_properties']) > 20) {
+      array_shift($_SESSION['viewed_properties']);
+    }
+  }
+  // Return JSON for AJAX
+  header('Content-Type: application/json');
+  echo json_encode(['success' => true]);
+  exit;
+}
+
 // -------------------------
 // 4) Handle CSV Export
 // -------------------------
 if (isset($_GET['export']) && $_GET['export'] === 'csv') {
   $city      = isset($_GET['city'])      ? trim($_GET['city'])      : '';
   $zip       = isset($_GET['zip'])       ? trim($_GET['zip'])       : '';
-  $price_min = isset($_GET['price_min']) ? (int)$_GET['price_min']  : '';
-  $price_max = isset($_GET['price_max']) ? (int)$_GET['price_max']  : '';
-  $beds      = isset($_GET['beds'])      ? (int)$_GET['beds']       : '';
-  $baths     = isset($_GET['baths'])     ? (int)$_GET['baths']      : '';
-  $sqft_min  = isset($_GET['sqft_min'])  ? (int)$_GET['sqft_min']   : '';
-  $sqft_max  = isset($_GET['sqft_max'])  ? (int)$_GET['sqft_max']   : '';
+  $price_min = isset($_GET['price_min']) && $_GET['price_min'] !== '' ? (int)$_GET['price_min']  : '';
+  $price_max = isset($_GET['price_max']) && $_GET['price_max'] !== '' ? (int)$_GET['price_max']  : '';
+  $beds      = isset($_GET['beds'])      && $_GET['beds'] !== ''      ? (int)$_GET['beds']       : '';
+  $baths     = isset($_GET['baths'])     && $_GET['baths'] !== ''     ? (int)$_GET['baths']      : '';
+  $sqft_min  = isset($_GET['sqft_min'])  && $_GET['sqft_min'] !== ''  ? (int)$_GET['sqft_min']   : '';
+  $sqft_max  = isset($_GET['sqft_max'])  && $_GET['sqft_max'] !== ''  ? (int)$_GET['sqft_max']   : '';
   
   $where  = [];
   $params = [];
@@ -124,12 +143,12 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
 // -------------------------
 $city      = isset($_GET['city'])      ? trim($_GET['city'])      : '';
 $zip       = isset($_GET['zip'])       ? trim($_GET['zip'])       : '';
-$price_min = isset($_GET['price_min']) ? (int)$_GET['price_min']  : '';
-$price_max = isset($_GET['price_max']) ? (int)$_GET['price_max']  : '';
-$beds      = isset($_GET['beds'])      ? (int)$_GET['beds']       : '';
-$baths     = isset($_GET['baths'])     ? (int)$_GET['baths']      : '';
-$sqft_min  = isset($_GET['sqft_min'])  ? (int)$_GET['sqft_min']   : '';
-$sqft_max  = isset($_GET['sqft_max'])  ? (int)$_GET['sqft_max']   : '';
+$price_min = isset($_GET['price_min']) && $_GET['price_min'] !== '' ? (int)$_GET['price_min']  : '';
+$price_max = isset($_GET['price_max']) && $_GET['price_max'] !== '' ? (int)$_GET['price_max']  : '';
+$beds      = isset($_GET['beds'])      && $_GET['beds'] !== ''      ? (int)$_GET['beds']       : '';
+$baths     = isset($_GET['baths'])     && $_GET['baths'] !== ''     ? (int)$_GET['baths']      : '';
+$sqft_min  = isset($_GET['sqft_min'])  && $_GET['sqft_min'] !== ''  ? (int)$_GET['sqft_min']   : '';
+$sqft_max  = isset($_GET['sqft_max'])  && $_GET['sqft_max'] !== ''  ? (int)$_GET['sqft_max']   : '';
 $sort      = isset($_GET['sort'])      ? $_GET['sort']            : 'price_desc';
 $view      = isset($_GET['view'])      ? $_GET['view']            : 'grid';
 $page      = isset($_GET['page'])      ? max(1, (int)$_GET['page']) : 1;
@@ -239,6 +258,60 @@ $st->bindValue(':limit',  $per_page, PDO::PARAM_INT);
 $st->bindValue(':offset', $offset,   PDO::PARAM_INT);
 $st->execute();
 $rows = $st->fetchAll();
+
+// -------------------------
+// 10.5) Get Smart Recommendations
+// -------------------------
+$recommendations = [];
+if (count($_SESSION['viewed_properties']) > 0 || count($_SESSION['favorites']) > 0 || $total > 0) {
+  // Get properties user has interacted with
+  $seed_props = array_merge($_SESSION['favorites'], $_SESSION['viewed_properties']);
+  
+  // If user searched, use current search criteria as seed
+  if ($total > 0 && count($rows) > 0) {
+    $avg_search_price = $stats['avg_price'] ?? 0;
+    $rec_price_min = $avg_search_price * 0.8;
+    $rec_price_max = $avg_search_price * 1.2;
+    
+    $rec_sql = "
+      SELECT L_ListingID, L_Address, L_City, L_SystemPrice, L_Keyword2 AS Beds, 
+             LM_Int2_3 AS SqFt, LM_Dec_3 AS Baths, L_Photos
+      FROM rets_property
+      WHERE L_SystemPrice BETWEEN :pmin AND :pmax
+    ";
+    
+    if ($city !== '') {
+      $rec_sql .= " AND L_City LIKE :city";
+    }
+    if ($beds !== '') {
+      $rec_sql .= " AND CAST(L_Keyword2 AS UNSIGNED) >= :beds";
+    }
+    
+    // Exclude already displayed properties
+    if (count($rows) > 0) {
+      $exclude_ids = array_map(function($r) { return $r['L_ListingID']; }, $rows);
+      $placeholders = implode(',', array_map(function($i) { return ":excl$i"; }, array_keys($exclude_ids)));
+      $rec_sql .= " AND L_ListingID NOT IN ($placeholders)";
+    }
+    
+    $rec_sql .= " ORDER BY RAND() LIMIT 4";
+    
+    $rec_st = $pdo->prepare($rec_sql);
+    $rec_st->bindValue(':pmin', $rec_price_min, PDO::PARAM_INT);
+    $rec_st->bindValue(':pmax', $rec_price_max, PDO::PARAM_INT);
+    if ($city !== '') $rec_st->bindValue(':city', "%$city%");
+    if ($beds !== '') $rec_st->bindValue(':beds', $beds, PDO::PARAM_INT);
+    
+    if (count($rows) > 0) {
+      foreach ($exclude_ids as $idx => $id) {
+        $rec_st->bindValue(":excl$idx", $id);
+      }
+    }
+    
+    $rec_st->execute();
+    $recommendations = $rec_st->fetchAll();
+  }
+}
 
 // -------------------------
 // 11) Helper Functions
@@ -367,6 +440,111 @@ function all_photos($json) {
     }
 
     /* Search Form */
+    .nlp-search-container {
+      margin-bottom: 2rem;
+    }
+    .nlp-search-wrapper {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .nlp-input {
+      flex: 1;
+      padding: 18px 24px;
+      border-radius: 16px;
+      border: 2px solid rgba(79, 124, 255, 0.3);
+      background: rgba(17, 26, 56, 0.7);
+      color: var(--ink);
+      font-size: 1.05rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .nlp-input:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(58, 134, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .nlp-input::placeholder {
+      color: rgba(154, 164, 199, 0.6);
+      font-size: 0.95rem;
+    }
+    .nlp-btn {
+      padding: 18px 32px;
+      background: linear-gradient(135deg, #3a86ff 0%, #6ca0ff 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(58, 134, 255, 0.4);
+    }
+    .nlp-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(58, 134, 255, 0.5);
+    }
+    .nlp-icon {
+      font-size: 1.2rem;
+      margin-right: 6px;
+    }
+    .nlp-loading {
+      text-align: center;
+      padding: 1rem;
+      color: var(--accent-light);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(58, 134, 255, 0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .nlp-result {
+      background: rgba(6, 214, 160, 0.1);
+      border: 1px solid rgba(6, 214, 160, 0.3);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      color: var(--success);
+      font-size: 0.9rem;
+    }
+    .nlp-divider {
+      text-align: center;
+      margin: 2rem 0 1.5rem;
+      position: relative;
+    }
+    .nlp-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(79, 124, 255, 0.2);
+    }
+    .nlp-divider span {
+      position: relative;
+      background: #090e1d;
+      padding: 0 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
     .search {
       background: rgba(17, 26, 56, 0.7);
       border: 1px solid rgba(79, 124, 255, 0.2);
@@ -686,6 +864,96 @@ function all_photos($json) {
     }
 
     /* Pagination */
+    .recommendations-section {
+      margin-top: 3rem;
+      padding: 2rem;
+      background: rgba(17, 26, 56, 0.5);
+      border-radius: 18px;
+      border: 1px solid rgba(79, 124, 255, 0.2);
+    }
+    .recommendations-title {
+      font-size: 1.5rem;
+      margin: 0 0 1.5rem;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .sparkle {
+      font-size: 1.8rem;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.1); }
+    }
+    .recommendations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .rec-card {
+      background: rgba(11, 17, 35, 0.8);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid rgba(79, 124, 255, 0.15);
+    }
+    .rec-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(58, 134, 255, 0.3);
+      border-color: var(--accent);
+    }
+    .rec-image {
+      height: 160px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .rec-image::after {
+      content: '👁️ View Details';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+      color: white;
+      padding: 1rem 0.75rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .rec-card:hover .rec-image::after {
+      opacity: 1;
+    }
+    .rec-content {
+      padding: 1rem;
+    }
+    .rec-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent-light);
+      margin-bottom: 0.5rem;
+    }
+    .rec-address {
+      font-size: 0.9rem;
+      color: var(--ink);
+      margin-bottom: 0.25rem;
+    }
+    .rec-city {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .rec-details {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(79, 124, 255, 0.15);
+    }
+
     .pagination {
       display: flex;
       gap: 0.6rem;
@@ -785,12 +1053,65 @@ function all_photos($json) {
     </div>
     <?php endif; ?>
 
+    <!-- NLP Search Bar -->
+    <div class="nlp-search-container">
+      <div class="nlp-search-wrapper">
+        <input 
+          type="text" 
+          id="nlp-query" 
+          class="nlp-input" 
+          placeholder="Try: '3 bed house in LA under 800k' or '2 bath condo in San Diego'"
+          autocomplete="off"
+          list="nlp-suggestions"
+        />
+        <datalist id="nlp-suggestions">
+          <option value="3 bedroom house in Los Angeles under 800k">
+          <option value="2 bath condo in San Diego">
+          <option value="4 bed home in Irvine with 2000 sqft">
+          <option value="house in San Jose under 1 million">
+          <option value="2 bedroom apartment in San Francisco">
+        </datalist>
+        <button type="button" id="nlp-search-btn" class="nlp-btn">
+          <span class="nlp-icon">✨</span> Smart Search
+        </button>
+      </div>
+      <div id="nlp-loading" class="nlp-loading" style="display:none;">
+        <span class="spinner"></span> Parsing your query...
+      </div>
+      <div id="nlp-result" class="nlp-result" style="display:none;"></div>
+      <div class="nlp-divider">
+        <span>or use manual filters below</span>
+      </div>
+    </div>
+
     <!-- Search Form -->
-    <form class="search" method="get">
+    <form class="search" method="get" id="search-form">
       <div class="search-grid">
         <div>
           <label for="city">City</label>
-          <input type="text" id="city" name="city" placeholder="e.g., San Jose" value="<?= htmlspecialchars($city) ?>">
+          <input type="text" id="city" name="city" placeholder="e.g., San Jose" value="<?= htmlspecialchars($city) ?>" list="city-suggestions" autocomplete="off">
+          <datalist id="city-suggestions">
+            <option value="Los Angeles">
+            <option value="San Diego">
+            <option value="San Jose">
+            <option value="San Francisco">
+            <option value="Fresno">
+            <option value="Sacramento">
+            <option value="Long Beach">
+            <option value="Oakland">
+            <option value="Bakersfield">
+            <option value="Anaheim">
+            <option value="Santa Ana">
+            <option value="Riverside">
+            <option value="Stockton">
+            <option value="Irvine">
+            <option value="Chula Vista">
+            <option value="Fremont">
+            <option value="San Bernardino">
+            <option value="Modesto">
+            <option value="Fontana">
+            <option value="Santa Clarita">
+          </datalist>
         </div>
         <div>
           <label for="zip">ZIP Code</label>
@@ -1006,6 +1327,33 @@ function all_photos($json) {
           if ($page < $total_pages) echo $link($page+1, 'Next »');
         ?>
       </nav>
+
+      <!-- Smart Recommendations -->
+      <?php if (count($recommendations) > 0): ?>
+        <div class="recommendations-section">
+          <h3 class="recommendations-title">
+            <span class="sparkle">✨</span> You Might Also Like
+          </h3>
+          <div class="recommendations-grid">
+            <?php foreach ($recommendations as $rec): 
+              $rec_photo = first_photo($rec['L_Photos']);
+              $rec_id = htmlspecialchars($rec['L_ListingID']);
+            ?>
+              <div class="rec-card" onclick="openModal('<?= $rec_id ?>')">
+                <div class="rec-image" style="background-image: url('<?= $rec_photo ?: 'https://via.placeholder.com/300x200?text=No+Image' ?>')"></div>
+                <div class="rec-content">
+                  <div class="rec-price"><?= money($rec['L_SystemPrice']) ?></div>
+                  <div class="rec-address"><?= htmlspecialchars($rec['L_Address']) ?></div>
+                  <div class="rec-city"><?= htmlspecialchars($rec['L_City']) ?></div>
+                  <div class="rec-details">
+                    <?= $rec['Beds'] ?: '—' ?> bd • <?= $rec['Baths'] ? rtrim(rtrim(number_format($rec['Baths'],1), '0'),'.') : '—' ?> ba • <?= $rec['SqFt'] ? number_format($rec['SqFt']) : '—' ?> sqft
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
 
@@ -1105,6 +1453,92 @@ function all_photos($json) {
       const listingId = modal.id.replace('modal-', '');
       currentImageIndex[listingId] = 0;
     });
+
+    // ==========================================
+    // NLP SEARCH FUNCTIONALITY
+    // ==========================================
+    const nlpInput = document.getElementById('nlp-query');
+    const nlpBtn = document.getElementById('nlp-search-btn');
+    const nlpLoading = document.getElementById('nlp-loading');
+    const nlpResult = document.getElementById('nlp-result');
+    const searchForm = document.getElementById('search-form');
+
+    // Handle Enter key in NLP input
+    nlpInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeNLPSearch();
+      }
+    });
+
+    // Handle button click
+    nlpBtn.addEventListener('click', executeNLPSearch);
+
+    function executeNLPSearch() {
+      const query = nlpInput.value.trim();
+      if (!query) {
+        alert('Please enter a search query');
+        return;
+      }
+
+      // Show loading
+      nlpLoading.style.display = 'flex';
+      nlpResult.style.display = 'none';
+
+      // Call API
+      fetch('api/parse_nlp.php?query=' + encodeURIComponent(query))
+        .then(response => response.json())
+        .then(data => {
+          nlpLoading.style.display = 'none';
+          
+          if (data.error) {
+            nlpResult.innerHTML = '❌ Error: ' + data.error;
+            nlpResult.style.display = 'block';
+            nlpResult.style.background = 'rgba(255, 70, 70, 0.1)';
+            nlpResult.style.borderColor = 'rgba(255, 70, 70, 0.3)';
+            nlpResult.style.color = '#ff6b6b';
+            return;
+          }
+
+          // Populate form fields
+          if (data.city) document.getElementById('city').value = data.city;
+          if (data.zip) document.getElementById('zip').value = data.zip;
+          if (data.price_min) document.getElementById('price_min').value = data.price_min;
+          if (data.price_max) document.getElementById('price_max').value = data.price_max;
+          if (data.beds) document.getElementById('beds').value = data.beds;
+          if (data.baths) document.getElementById('baths').value = data.baths;
+          if (data.sqft_min) document.getElementById('sqft_min').value = data.sqft_min;
+          if (data.sqft_max) document.getElementById('sqft_max').value = data.sqft_max;
+
+          // Show result message
+          let resultParts = [];
+          if (data.city) resultParts.push('📍 ' + data.city);
+          if (data.beds) resultParts.push('🛏️ ' + data.beds + '+ beds');
+          if (data.baths) resultParts.push('🛁 ' + data.baths + '+ baths');
+          if (data.price_max) resultParts.push('💰 under $' + Number(data.price_max).toLocaleString());
+          if (data.price_min) resultParts.push('💰 over $' + Number(data.price_min).toLocaleString());
+          if (data.sqft_min) resultParts.push('📏 ' + Number(data.sqft_min).toLocaleString() + '+ sqft');
+          
+          nlpResult.innerHTML = '✅ Found filters: ' + resultParts.join(' • ');
+          nlpResult.style.display = 'block';
+          nlpResult.style.background = 'rgba(6, 214, 160, 0.1)';
+          nlpResult.style.borderColor = 'rgba(6, 214, 160, 0.3)';
+          nlpResult.style.color = 'var(--success)';
+
+          // Auto-submit form after 1 second
+          setTimeout(() => {
+            searchForm.submit();
+          }, 1000);
+        })
+        .catch(error => {
+          nlpLoading.style.display = 'none';
+          nlpResult.innerHTML = '❌ Error: ' + error.message;
+          nlpResult.style.display = 'block';
+          nlpResult.style.background = 'rgba(255, 70, 70, 0.1)';
+          nlpResult.style.borderColor = 'rgba(255, 70, 70, 0.3)';
+          nlpResult.style.color = '#ff6b6b';
+        });
+    }
   </script>
 </body>
 </html>
