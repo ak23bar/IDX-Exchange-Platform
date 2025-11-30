@@ -203,6 +203,35 @@ The California Property Finder is a comprehensive, production-ready web applicat
 - **MVC-like Structure**: Separation of concerns
 - **Session-based State**: User preferences and favorites
 
+#### System Architecture Diagram
+
+```mermaid
+graph TB
+    A[User Browser] -->|HTTP Requests| B[index.php]
+    B -->|PDO Queries| C[(MySQL Database<br/>rets_property)]
+    B -->|Session Storage| D[PHP Sessions<br/>Favorites/State]
+    
+    A -->|AJAX Calls| E[API Endpoints]
+    E -->|city_autocomplete.php| C
+    E -->|parse_nlp.php| C
+    E -->|search_suggestions.php| C
+    E -->|calibot_query.php| C
+    
+    A -->|JavaScript API| F[Google Maps API]
+    A -->|Widget Embed| G[ElevenLabs AI<br/>Calibot]
+    G -->|API Calls| E
+    
+    B -->|Geocoding| F
+    B -->|CSV Export| A
+    
+    style A fill:#4a90e2,color:#fff
+    style B fill:#50c878,color:#fff
+    style C fill:#ff6b6b,color:#fff
+    style E fill:#ffa500,color:#fff
+    style F fill:#4285f4,color:#fff
+    style G fill:#00d4ff,color:#fff
+```
+
 ---
 
 ## Database Schema
@@ -269,6 +298,28 @@ CREATE TABLE rets_property (
 - **Primary Key**: `L_ListingID` - Used for favorites, viewed properties, and detail views
 - **Search Indexes**: City, ZIP, Price, Beds, SqFt for fast filtering
 - **Composite Index**: City + Price for optimized city searches with price filters
+
+#### Database Schema Diagram
+
+```mermaid
+erDiagram
+    rets_property {
+        VARCHAR L_ListingID PK "Primary Key"
+        VARCHAR L_Address "Street Address"
+        VARCHAR L_City "City Name"
+        VARCHAR L_Zip "ZIP Code"
+        DECIMAL L_SystemPrice "Listing Price"
+        VARCHAR L_Keyword2 "Bedrooms"
+        INT LM_Int2_3 "Bathrooms"
+        DECIMAL LM_Dec_3 "Square Footage"
+        JSON L_Photos "Image URLs Array"
+        TIMESTAMP L_UpdateDate "Last Updated"
+    }
+    
+    rets_property ||--o{ favorites : "has"
+    rets_property ||--o{ search_results : "returns"
+    rets_property ||--o{ recommendations : "generates"
+```
 
 ---
 
@@ -342,6 +393,33 @@ chmod 755 api/*.php
 ---
 
 ## API Documentation
+
+### API Request Flow Diagram
+
+```mermaid
+graph TB
+    A[Frontend JavaScript] -->|AJAX Request| B{API Endpoint}
+    
+    B -->|GET /api/city_autocomplete.php| C[City Autocomplete]
+    B -->|GET /api/search_suggestions.php| D[Search Suggestions]
+    B -->|GET /api/parse_nlp.php| E[NLP Parser]
+    B -->|GET /api/calibot_query.php| F[Calibot Query]
+    
+    C -->|Fuzzy Match| G[(Database Query)]
+    D -->|Parse Query| G
+    E -->|Extract Filters| G
+    F -->|Property Stats| G
+    
+    G -->|PDO Prepared Statement| H[(MySQL Database)]
+    H -->|Results| I[JSON Response]
+    I -->|Return Data| A
+    
+    style A fill:#4a90e2,color:#fff
+    style B fill:#ffa500,color:#fff
+    style G fill:#50c878,color:#fff
+    style H fill:#ff6b6b,color:#fff
+    style I fill:#9b59b6,color:#fff
+```
 
 ### Public Endpoints
 
@@ -475,6 +553,32 @@ GET /api/search_suggestions.php?q=los%20angeles%204
 - `showPropertyModal(listingId)`: Display property details
 - `initGoogleMaps()`: Initialize Google Maps
 
+### Frontend Component Flow
+
+```mermaid
+graph LR
+    A[User Input] -->|Type Query| B[Smart Search Input]
+    B -->|Debounce| C[fetchCitySuggestions]
+    C -->|API Call| D[city_autocomplete.php]
+    D -->|JSON Response| E[showCitySuggestions]
+    E -->|Display| F[Autocomplete Dropdown]
+    F -->|Select| G[selectCity/performGeneralSearch]
+    G -->|Form Submit| H[PHP Backend]
+    H -->|Query DB| I[(MySQL)]
+    I -->|Results| J[Property Cards]
+    J -->|Click| K[Property Modal]
+    K -->|Show| L[Image Gallery + Map]
+    
+    J -->|Heart Click| M[toggleFavorite]
+    M -->|AJAX| N[PHP Session]
+    N -->|Update| J
+    
+    style B fill:#4a90e2,color:#fff
+    style D fill:#ffa500,color:#fff
+    style H fill:#50c878,color:#fff
+    style I fill:#ff6b6b,color:#fff
+```
+
 ### CSS Architecture
 
 - **Responsive Design**: Mobile-first with breakpoints
@@ -497,6 +601,36 @@ GET /api/search_suggestions.php?q=los%20angeles%204
 5. **Pagination Logic**: Page calculation and offset
 6. **Statistics Calculation**: Aggregate queries
 7. **CSV Export**: Data formatting and download
+
+### Backend Request Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User Browser
+    participant I as index.php
+    participant S as PHP Session
+    participant D as MySQL Database
+    participant A as API Endpoints
+    
+    U->>I: HTTP Request (GET/POST)
+    I->>S: Read/Write Session Data
+    I->>I: Process Filters & Search
+    I->>D: Execute PDO Query
+    D-->>I: Return Results
+    I->>I: Calculate Statistics
+    I->>I: Generate HTML
+    I-->>U: Render Page
+    
+    U->>A: AJAX Request (Autocomplete)
+    A->>D: Query Database
+    D-->>A: Return Suggestions
+    A-->>U: JSON Response
+    
+    U->>I: Toggle Favorite (AJAX)
+    I->>S: Update Session
+    S-->>I: Confirm Update
+    I-->>U: JSON Response
+```
 
 ### Key PHP Functions
 
@@ -547,6 +681,41 @@ GET /api/search_suggestions.php?q=los%20angeles%204
 ---
 
 ## Demo Walkthrough
+
+### User Journey Flow
+
+```mermaid
+flowchart TD
+    Start([User Visits Site]) --> Home[Homepage with Hero Section]
+    Home --> Search[Type in Search Bar]
+    Search -->|City Query| Autocomplete[City Suggestions Appear]
+    Search -->|General Query| General[General Search Results]
+    Autocomplete --> Select[Select City Suggestion]
+    Select --> Results[Property Results Displayed]
+    General --> Results
+    
+    Results --> View[View Property Details]
+    View --> Modal[Property Modal Opens]
+    Modal --> Gallery[Browse Image Gallery]
+    Modal --> Map[View on Google Maps]
+    Modal --> Favorite[Add to Favorites]
+    
+    Results --> Filter[Apply Advanced Filters]
+    Filter --> Filtered[Filtered Results]
+    Filtered --> Sort[Sort Results]
+    Sort --> Paginate[Navigate Pages]
+    
+    Results --> Export[Export to CSV]
+    Results --> Calibot[Ask Calibot AI]
+    
+    Favorite --> FavoritesView[View Favorites Only]
+    FavoritesView --> Clear[Clear All Favorites]
+    
+    style Start fill:#4a90e2,color:#fff
+    style Results fill:#50c878,color:#fff
+    style Modal fill:#ffa500,color:#fff
+    style Favorite fill:#ff6b6b,color:#fff
+```
 
 ### 1. Homepage & Search
 
@@ -599,6 +768,8 @@ GET /api/search_suggestions.php?q=los%20angeles%204
 
 ## File Structure
 
+### Project Directory Tree
+
 ```
 IDX/
 ├── index.php                      # Main application file (~2800 lines)
@@ -622,6 +793,65 @@ IDX/
 ├── favicon_IDX.ico               # Site favicon
 ├── title_image.jpg               # Hero section background
 └── README.md                     # This file
+```
+
+### Component Interaction Diagram
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[index.php<br/>Main Application]
+        B[HTML/CSS/JS<br/>Client-Side Logic]
+    end
+    
+    subgraph "API Layer"
+        C[city_autocomplete.php]
+        D[search_suggestions.php]
+        E[parse_nlp.php]
+        F[calibot_query.php]
+    end
+    
+    subgraph "Backend Layer"
+        G[PHP Session<br/>State Management]
+        H[PDO Database<br/>Connection]
+    end
+    
+    subgraph "Data Layer"
+        I[(MySQL Database<br/>rets_property)]
+    end
+    
+    subgraph "External Services"
+        J[Google Maps API]
+        K[ElevenLabs AI]
+    end
+    
+    A --> B
+    B -->|AJAX| C
+    B -->|AJAX| D
+    B -->|AJAX| E
+    B -->|AJAX| F
+    B -->|Embed| K
+    B -->|JavaScript API| J
+    
+    A --> G
+    A --> H
+    C --> H
+    D --> H
+    E --> H
+    F --> H
+    H --> I
+    
+    A -->|Geocoding| J
+    
+    style A fill:#4a90e2,color:#fff
+    style C fill:#ffa500,color:#fff
+    style D fill:#ffa500,color:#fff
+    style E fill:#ffa500,color:#fff
+    style F fill:#ffa500,color:#fff
+    style H fill:#50c878,color:#fff
+    style I fill:#ff6b6b,color:#fff
+    style J fill:#4285f4,color:#fff
+    style K fill:#00d4ff,color:#fff
 ```
 
 ---
