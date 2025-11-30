@@ -1,4 +1,4 @@
-# California Property Finder - Complete Project Documentation
+# California Property Finder - Project Documentation
 
 **Developed by:** Akbar Aman — SD6 Team Lead, IDX Exchange Pro-bono Initiative  
 **Status:** Complete & Production Ready  
