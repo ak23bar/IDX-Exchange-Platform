@@ -678,7 +678,7 @@ function all_photos($json) {
       window.googleMapsLoaded = true;
     }
   </script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDG9X7EQahSj96_k2tURw3IP7rlcNkNenw&callback=initGoogleMaps" async defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=XXX&XXX async defer></script>
   <style>
     :root {
       --bg: #080d1a;
