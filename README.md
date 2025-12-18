@@ -1,42 +1,71 @@
 # California Property Finder - Project Documentation
 
 **Developed by:** Akbar Aman — SD6 Team Lead, IDX Exchange Pro-bono Initiative  
-**Status:** Complete & Production Ready  
-**Demo Date:** Final Presentation
+**Status:** ✅ Complete & Production Ready  
+**Live Site:** [https://akbar.califorsale.org](https://akbar.califorsale.org)  
+**Completion Date:** December 18, 2025
 
 ---
 
-## Table of Contents
+## 🎯 Project Overview
 
-1. [Project Overview](#project-overview)
-2. [Features & Functionality](#features--functionality)
-3. [Technology Stack](#technology-stack)
-4. [Database Schema](#database-schema)
-5. [Installation & Setup](#installation--setup)
-6. [API Documentation](#api-documentation)
-7. [Frontend Architecture](#frontend-architecture)
-8. [Backend Architecture](#backend-architecture)
-9. [User Experience Features](#user-experience-features)
-10. [Demo Walkthrough](#demo-walkthrough)
-11. [File Structure](#file-structure)
-12. [Configuration Guide](#configuration-guide)
-13. [Troubleshooting](#troubleshooting)
+The California Property Finder is a production-ready real estate search platform featuring **live MLS data**, **AI-powered search**, **natural language processing**, and **intelligent property recommendations**. Built with PHP, MySQL, and modern JavaScript, it delivers a seamless property discovery experience.
+
+### 🏆 Key Achievements
+
+- ✅ **Advanced NLP Search**: Parse queries like "Los Angeles homes under 1 million" into precise filters
+- ✅ **Hero Section**: Fixed background with smart search and gradient overlays
+- ✅ **Schema.org Markup**: Full structured data for AI/RAG systems (ElevenLabs integration)
+- ✅ **localStorage Save System**: Client-side property bookmarking without server calls
+- ✅ **Google Maps Integration**: Interactive property location visualization
+- ✅ **Smart Recommendations**: "You Might Also Like" feature based on search criteria
+- ✅ **Sticky Header**: Context-aware navigation that appears on scroll
+- ✅ **CSV Export**: Property data export for analysis
+- ✅ **API Endpoints**: RESTful API for external integrations (Calibot AI)
 
 ---
 
-## Project Overview
+## 🚀 Major Features
 
-The California Property Finder is a comprehensive, production-ready web application for searching and exploring real estate listings across California. Built as part of the IDX Exchange Pro-bono Initiative, this project demonstrates full-stack development capabilities with PHP, MySQL, JavaScript, and modern web APIs.
+### 1. Natural Language Search
+**Smart Query Parser** - Extracts filters from complete sentences:
+- "Los Angeles homes under 4 million" → `city=Los Angeles, price_max=4000000`
+- "3 bedroom houses in San Diego" → `city=San Diego, beds=3`
+- "Beverly Hills between 2 and 5 million" → `city=Beverly Hills, price_min=2000000, price_max=5000000`
 
-### Key Highlights
+**Supported Patterns:**
+- Price: "under", "less than", "below", "over", "more than", "between X and Y"
+- Units: "million", "thousand", "m", "k" (e.g., "1.5m", "800k")
+- Beds/Baths: "3 beds", "2.5 baths"
+- Square Feet: "2000 sqft", "1500+ square feet"
 
-- **Complete Property Search System**: Advanced filtering, sorting, and search capabilities
-- **Interactive Maps**: Google Maps integration with property visualization
-- **AI Assistant**: ElevenLabs Conversational AI (Calibot) for intelligent property assistance
-- **Favorites Management**: Complete bookmarking system with session persistence
-- **Responsive Design**: Mobile-first approach with smooth animations
-- **Real-time Suggestions**: Smart autocomplete for cities and property queries
-- **Data Export**: CSV export functionality for analysis
+### 2. Hero Section & Search Interface
+- **Fixed Background**: `title_image.jpg` with smooth parallax effect
+- **Gradient Overlays**: Multi-layer gradients for text readability
+- **Smart Search Bar**: Real-time city autocomplete with property counts
+- **Dynamic Padding**: Adjusts for dropdown visibility
+
+### 3. Property Save System
+**Client-Side with localStorage:**
+- No server calls for saves (instant response)
+- "View Saved" link shows only saved properties
+- Real-time counter updates
+- Persists across sessions
+- Works on main listings and recommendations
+
+### 4. AI Integration (Calibot)
+**ElevenLabs Conversational AI:**
+- Custom knowledge base at `/api/calibot_knowledge_base.txt`
+- Schema.org JSON-LD on every property card
+- RESTful API endpoint: `/api/calibot_query.php`
+- Structured data attributes for RAG parsing
+- Accurate listing ID lookups and property details
+
+### 5. Google Maps
+- **API Key**: Dylan's working key (AIzaSyDUDANvW9dJmVEVS1BAHDCi9iT44sQocqs)
+- Multiple map types: Roadmap, Satellite, Hybrid
+- Geocoding for property addresses
+- Interactive markers and modals
 
 ---
 
@@ -166,9 +195,180 @@ The California Property Finder is a comprehensive, production-ready web applicat
 - Date-stamped filenames
 - Compatible with Excel and Google Sheets
 
-### 9. Smart Recommendations
+### 6. Smart Recommendations
+**"You Might Also Like" Section:**
+- Analyzes current search filters (city, price, beds, baths)
+- Suggests similar properties in the same city
+- Price range: ±20% of search criteria
+- Bedroom/bathroom flexibility
+- Displays top 6 recommendations
+- Save button on each recommendation
 
-**Property Recommendations**
+---
+
+## 🛠️ Technology Stack
+
+**Backend:**
+- PHP 7.2+ (Server-side rendering and API)
+- MySQL/MariaDB (Property database)
+- PDO (Database abstraction layer)
+
+**Frontend:**
+- Vanilla JavaScript (ES6+)
+- CSS3 (Custom properties, Grid, Flexbox)
+- HTML5 Semantic markup
+- Schema.org JSON-LD (Structured data)
+
+**APIs & Services:**
+- Google Maps JavaScript API
+- ElevenLabs Conversational AI
+- RESTful API endpoints
+
+**Features:**
+- Natural Language Processing (NLP)
+- localStorage API
+- Fetch API (AJAX)
+- URLSearchParams (Query string management)
+
+---
+
+## 📊 Database Schema
+
+**Table:** `rets_property`  
+**Database:** `boxgra6_cali`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `L_ListingID` | VARCHAR | Unique listing ID (PK) |
+| `L_Address` | VARCHAR | Street address |
+| `L_City` | VARCHAR | City name |
+| `L_Zip` | VARCHAR | ZIP code |
+| `L_SystemPrice` | DECIMAL | Price in USD |
+| `L_Keyword2` | VARCHAR | Number of bedrooms |
+| `LM_Dec_3` | DECIMAL | Number of bathrooms |
+| `LM_Int2_3` | INT | Square footage |
+| `L_Photos` | TEXT | Photo URLs (JSON/comma-separated) |
+| `L_UpdateDate` | DATETIME | Last updated timestamp |
+
+---
+
+## 🔧 Key Files
+
+```
+/home/neo/IDX/
+├── index.php                          # Main application (3,255 lines)
+├── config.php                         # Database configuration
+├── title_image.jpg                    # Hero background image
+├── api/
+│   ├── calibot_query.php             # API endpoint for Calibot
+│   ├── calibot_knowledge_base.txt    # AI knowledge base
+│   ├── api_docs.html                 # API documentation
+│   ├── city_autocomplete.php         # City search API
+│   └── listing_ids.php               # Static listing reference
+└── README.md                         # This file
+```
+
+---
+
+## 🎨 Design Features
+
+**Hero Section:**
+- Fixed background image (`title_image.jpg`)
+- Multi-layer gradient overlays
+- Centered smart search with autocomplete
+- Dynamic padding based on dropdown visibility
+
+**Color Scheme:**
+- Primary: `#4f7cff` (Accent blue)
+- Background: `#080d1a` (Dark navy)
+- Text: `#e2e8f0` (Light gray)
+- Muted: `#7e8bbd` (Mid blue-gray)
+
+**Typography:**
+- System font stack: `-apple-system, BlinkMacSystemFont, 'Segoe UI'`
+- Responsive sizing with rem units
+
+---
+
+## 🤖 AI Integration Details
+
+**Calibot Configuration:**
+
+1. **Knowledge Base URL**: `https://akbar.califorsale.org/api/calibot_knowledge_base.txt`
+2. **Website Context**: `https://akbar.califorsale.org/`
+3. **API Endpoint**: `https://akbar.califorsale.org/api/calibot_query.php`
+
+**API Actions:**
+- `search` - Find properties with filters
+- `stats` - Market statistics
+- `city_stats` - City-specific data
+- `property_details` - Lookup by listing ID
+
+**Structured Data:**
+- Every property has Schema.org JSON-LD
+- `data-property-*` attributes on all cards
+- Machine-readable formats for RAG systems
+
+---
+
+## 🚦 Setup Instructions
+
+1. **Database Configuration** (`config.php` or top of `index.php`):
+```php
+$DB_HOST = 'localhost';
+$DB_NAME = 'boxgra6_cali';
+$DB_USER = 'your_username';
+$DB_PASS = 'your_password';
+```
+
+2. **Google Maps API Key** (line ~3228):
+```html
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY&callback=initGoogleMaps" async defer></script>
+```
+
+3. **ElevenLabs Agent ID** (line ~3227):
+```html
+<elevenlabs-convai agent-id="YOUR_AGENT_ID"></elevenlabs-convai>
+```
+
+4. **Upload Files** to web server
+
+5. **Test URL**: Navigate to `https://your-domain.com/`
+
+---
+
+## ✅ Completed Features Checklist
+
+- [x] Hero section with fixed background
+- [x] Smart search with city autocomplete
+- [x] Natural language query parsing (NLP)
+- [x] Full property filtering (city, price, beds, baths, sqft)
+- [x] localStorage save system
+- [x] "View Saved" functionality
+- [x] Google Maps integration
+- [x] Property detail modals with image galleries
+- [x] "You Might Also Like" recommendations
+- [x] Sticky header on scroll
+- [x] Schema.org structured data
+- [x] ElevenLabs AI integration (Calibot)
+- [x] API endpoints for external access
+- [x] CSV export functionality
+- [x] Responsive design
+- [x] Error handling and validation
+
+---
+
+## 📝 Known Issues & Limitations
+
+1. **ModSecurity**: Some API endpoints may be blocked by server firewall (406 errors)
+2. **CLI PHP**: PDO MySQL driver not available in command-line PHP
+3. **Photo Parsing**: Some MLS photo formats may not display correctly
+4. **Geocoding Limits**: Google Maps API has rate limits
+
+**Workarounds:**
+- Static knowledge base files for AI agent
+- Schema.org markup for property data access
+- Client-side localStorage for saves (no server calls)
 - Based on viewing history
 - Based on favorites
 - Based on current search criteria
@@ -856,7 +1056,42 @@ graph TB
 
 ---
 
-## Configuration Guide
+## 🎓 Learning Outcomes
+
+This project demonstrates:
+- **Full-Stack Development**: PHP backend + JavaScript frontend
+- **Database Design**: Complex queries with joins and aggregations  
+- **API Development**: RESTful endpoints with JSON responses
+- **AI Integration**: Working with conversational AI and RAG systems
+- **Modern Web Standards**: Schema.org, semantic HTML, accessibility
+- **Natural Language Processing**: Query parsing and intent extraction
+- **Real-time Features**: AJAX, localStorage, dynamic UI updates
+- **Map Integration**: Google Maps API with geocoding
+- **Responsive Design**: Mobile-first CSS with modern layout techniques
+
+---
+
+## 👤 Developer
+
+**Akbar Aman**  
+SD6 Team Lead, IDX Exchange Pro-bono Initiative
+
+**Project Status:** ✅ Complete and Production Ready  
+**Completion Date:** December 18, 2025  
+**Live Site:** [https://akbar.califorsale.org](https://akbar.califorsale.org)
+
+---
+
+## 🙏 Acknowledgments
+
+- Dylan's reference implementation for hero section design
+- Google Maps Platform for geocoding services
+- ElevenLabs for conversational AI technology
+- California MLS for property data
+
+---
+
+*End of Documentation*
 
 ### Database Configuration
 

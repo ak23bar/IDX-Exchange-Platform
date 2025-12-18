@@ -1221,27 +1221,34 @@ function all_photos($json) {
       object-fit: cover;
       background: #0d1733;
     }
-    .fav-btn {
+    .save-btn {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.6);
-      border: none;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;
+      top: 12px;
+      right: 12px;
+      background: rgba(8, 13, 26, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(108, 160, 255, 0.3);
+      color: var(--accent-light);
+      padding: 6px 14px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
       z-index: 10;
     }
-    .fav-btn:hover {
-      background: rgba(0, 0, 0, 0.8);
-      transform: scale(1.1);
+    .save-btn:hover {
+      background: rgba(108, 160, 255, 0.2);
+      border-color: var(--accent);
+      transform: translateY(-1px);
     }
-    .fav-btn.active {
-      color: #ff006e;
+    .save-btn.saved {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .save-btn.saved .save-text::after {
+      content: 'd';
     }
     .pad {
       padding: 1rem 1.2rem 1.2rem;
@@ -1774,33 +1781,6 @@ function all_photos($json) {
               </svg>
               List
             </button>
-            <?php if (count($_SESSION['favorites']) > 0): ?>
-              <?php if ($show_favorites): ?>
-                <button type="button" class="active" onclick="window.location.href='?<?= http_build_query(array_diff_key($_GET, ['show_favorites'=>'', 'page'=>''])) ?>'" 
-                        style="margin-left:0.5rem;background:rgba(79,124,255,0.2);border-color:var(--accent-light)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                  Viewing Favorites
-                </button>
-                <button type="button" onclick="clearAllFavorites()" 
-                        style="margin-left:0.5rem;background:rgba(255,77,77,0.2);border-color:rgba(255,77,77,0.5);color:#ff6b6b"
-                        title="Clear all favorites">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px">
-                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                  Clear All
-                </button>
-              <?php else: ?>
-                <button type="button" onclick="window.location.href='?<?= http_build_query(array_merge(array_diff_key($_GET, ['page'=>'']), ['show_favorites' => '1'])) ?>'" 
-                        style="margin-left:0.5rem">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                  View Favorites (<?= count($_SESSION['favorites']) ?>)
-                </button>
-              <?php endif; ?>
-            <?php endif; ?>
           </div>
           <select class="sort-select" onchange="window.location.href='?<?= http_build_query(array_diff_key($_GET, ['sort'=>''])) ?>&sort=' + this.value + '&page=1'">
             <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Price: High to Low</option>
@@ -1813,20 +1793,8 @@ function all_photos($json) {
         </div>
         <p style="margin:0;color:#bfc8eb;">
           <strong><?= min($per_page, $total - $offset) ?></strong> of <strong><?= number_format($total) ?></strong> properties
-          | <strong class="favorites-count"><?= count($_SESSION['favorites']) ?></strong> favorites
-          <?php if (count($_SESSION['favorites']) > 0): ?>
-            <?php if ($show_favorites): ?>
-              | <a href="?<?= http_build_query(array_diff_key($_GET, ['show_favorites'=>'', 'page'=>''])) ?>" 
-                    style="color:var(--accent-light);text-decoration:underline;cursor:pointer;margin-left:0.5rem">
-                  Show All Properties
-                </a>
-            <?php else: ?>
-              | <a href="?<?= http_build_query(array_merge(array_diff_key($_GET, ['page'=>'']), ['show_favorites' => '1'])) ?>" 
-                    style="color:var(--accent-light);text-decoration:underline;cursor:pointer;margin-left:0.5rem">
-                  View Favorites (<?= count($_SESSION['favorites']) ?>)
-                </a>
-            <?php endif; ?>
-          <?php endif; ?>
+          | <a href="#" id="view-saved-link" style="color:var(--accent-light);text-decoration:underline;cursor:pointer;display:none">View Saved</a>
+          | <a href="#" id="show-all-link" style="color:var(--accent-light);text-decoration:underline;cursor:pointer;display:none">Show All Properties</a>
         </p>
       </div>
 
@@ -1855,15 +1823,50 @@ function all_photos($json) {
           $beds = $r['Beds'] !== null ? (int)$r['Beds'] : null;
           $baths = $r['Baths'] !== null ? (float)$r['Baths'] : null;
           $sqft = $r['SqFt'] !== null ? (int)$r['SqFt'] : null;
-          // Normalize listing ID and favorites for consistent comparison
+          // Normalize listing ID for consistent comparison
           $normalized_listing_id = (string)trim($listing_id);
-          $normalized_favorites = array_map(function($id) {
-            return (string)trim($id);
-          }, $_SESSION['favorites']);
-          $is_fav = in_array($normalized_listing_id, $normalized_favorites, true);
           $price_per_sqft = ($sqft && $r['L_SystemPrice']) ? money($r['L_SystemPrice'] / $sqft) . '/ft²' : null;
         ?>
-          <article class="card" onclick="openModal('<?= htmlspecialchars($normalized_listing_id) ?>')">
+          <article class="card" 
+                   onclick="openModal('<?= htmlspecialchars($normalized_listing_id) ?>')"
+                   data-property-id="<?= htmlspecialchars($normalized_listing_id) ?>"
+                   data-property-price="<?= htmlspecialchars($r['L_SystemPrice'] ?? 0) ?>"
+                   data-property-address="<?= htmlspecialchars($full_addr) ?>"
+                   data-property-beds="<?= $beds ?? 0 ?>"
+                   data-property-baths="<?= $baths ?? 0 ?>"
+                   data-property-sqft="<?= $sqft ?? 0 ?>"
+                   itemscope 
+                   itemtype="https://schema.org/RealEstateListing">
+            
+            <!-- Schema.org JSON-LD for AI/RAG parsing -->
+            <script type="application/ld+json">
+            {
+              "@context": "https://schema.org",
+              "@type": "RealEstateListing",
+              "name": "Property at <?= htmlspecialchars($full_addr) ?>",
+              "identifier": "<?= htmlspecialchars($normalized_listing_id) ?>",
+              "url": "<?= htmlspecialchars($_SERVER['REQUEST_URI']) ?>#listing-<?= htmlspecialchars($normalized_listing_id) ?>",
+              "price": "<?= htmlspecialchars($r['L_SystemPrice'] ?? 0) ?>",
+              "priceCurrency": "USD",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "<?= htmlspecialchars($addr) ?>",
+                "addressLocality": "<?= htmlspecialchars($city_name) ?>",
+                "addressRegion": "CA",
+                "postalCode": "<?= htmlspecialchars($zip_code) ?>"
+              },
+              "numberOfRooms": "<?= $beds ?? 0 ?>",
+              "numberOfBathroomsTotal": "<?= $baths ?? 0 ?>",
+              "floorSize": {
+                "@type": "QuantitativeValue",
+                "value": "<?= $sqft ?? 0 ?>",
+                "unitCode": "SQF"
+              }<?php if ($img): ?>,
+              "image": "<?= htmlspecialchars($img) ?>"
+              <?php endif; ?>
+            }
+            </script>
+            
             <div class="img-container">
               <?php if ($img): ?>
                 <img class="img" src="<?= htmlspecialchars($img) ?>" alt="Property at <?= $full_addr ?>" loading="lazy" />
@@ -1872,35 +1875,46 @@ function all_photos($json) {
                   <div>No Photo Available</div>
                 </div>
               <?php endif; ?>
-              <button class="fav-btn <?= $is_fav ? 'active' : '' ?>" 
+              <button class="save-btn" 
                       data-listing-id="<?= htmlspecialchars($normalized_listing_id) ?>"
-                      onclick="event.stopPropagation(); toggleFavorite('<?= htmlspecialchars($normalized_listing_id) ?>', this, event)"
-                      title="<?= $is_fav ? 'Remove from favorites' : 'Add to favorites' ?>">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="<?= $is_fav ? 'currentColor' : 'none' ?>" stroke="currentColor" stroke-width="2">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
+                      onclick="event.stopPropagation(); toggleSave('<?= htmlspecialchars($normalized_listing_id) ?>', this)"
+                      title="Save this property">
+                <span class="save-text">Save</span>
               </button>
             </div>
             <div class="pad">
               <div>
-                <div class="price"><?= htmlspecialchars($price) ?></div>
+                <div class="price" itemprop="price" content="<?= htmlspecialchars($r['L_SystemPrice'] ?? 0) ?>"><?= htmlspecialchars($price) ?></div>
                 <?php if ($price_per_sqft): ?>
                   <div style="font-size:0.75rem;color:var(--muted);margin-top:2px"><?= htmlspecialchars($price_per_sqft) ?></div>
                 <?php endif; ?>
-                <div class="addr"><?= $full_addr ?></div>
+                <div class="addr" itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+                  <span itemprop="streetAddress"><?= htmlspecialchars($addr) ?></span>, 
+                  <span itemprop="addressLocality"><?= htmlspecialchars($city_name) ?></span>, 
+                  <span itemprop="addressRegion">CA</span> 
+                  <span itemprop="postalCode"><?= htmlspecialchars($zip_code) ?></span>
+                </div>
               </div>
-              <div class="meta">
-                <span><?= $beds !== null ? (int)$beds . ' beds' : '— beds' ?></span>
-                <span><?= $baths !== null ? rtrim(rtrim(number_format($baths,1), '0'),'.') . ' baths' : '— baths' ?></span>
-                <span><?= $sqft ? number_format($sqft) . ' sqft' : '— sqft' ?></span>
+              <div class="meta" aria-label="Property Details">
+                <span><meta itemprop="numberOfRooms" content="<?= $beds ?? 0 ?>"><?= $beds !== null ? (int)$beds . ' beds' : '— beds' ?></span>
+                <span><meta itemprop="numberOfBathroomsTotal" content="<?= $baths ?? 0 ?>"><?= $baths !== null ? rtrim(rtrim(number_format($baths,1), '0'),'.') . ' baths' : '— baths' ?></span>
+                <span><span itemprop="floorSize" itemscope itemtype="https://schema.org/QuantitativeValue"><meta itemprop="value" content="<?= $sqft ?? 0 ?>"><meta itemprop="unitCode" content="SQF"><?= $sqft ? number_format($sqft) . ' sqft' : '— sqft' ?></span></span>
               </div>
             </div>
           </article>
 
           <!-- Modal for this property -->
-          <div id="modal-<?= htmlspecialchars($normalized_listing_id) ?>" class="modal" onclick="if(event.target === this) closeModal('<?= htmlspecialchars($normalized_listing_id) ?>')">
+          <div id="modal-<?= htmlspecialchars($normalized_listing_id) ?>" 
+               class="modal" 
+               onclick="if(event.target === this) closeModal('<?= htmlspecialchars($normalized_listing_id) ?>')"
+               role="dialog"
+               aria-labelledby="modal-title-<?= htmlspecialchars($normalized_listing_id) ?>"
+               aria-describedby="modal-desc-<?= htmlspecialchars($normalized_listing_id) ?>"
+               data-listing-id="<?= htmlspecialchars($normalized_listing_id) ?>">
             <div class="modal-content">
-              <button class="modal-close" onclick="closeModal('<?= htmlspecialchars($normalized_listing_id) ?>')">&times;</button>
+              <button class="modal-close" 
+                      onclick="closeModal('<?= htmlspecialchars($normalized_listing_id) ?>')"
+                      aria-label="Close property details">&times;</button>
               
               <?php if (count($all_imgs) > 0): ?>
               <div class="gallery">
@@ -1927,23 +1941,35 @@ function all_photos($json) {
               <?php endif; ?>
               
               <div class="modal-body">
-                <h2 style="margin:0 0 1rem;color:var(--accent-light);font-size:1.8rem"><?= htmlspecialchars($price) ?></h2>
+                <h2 id="modal-title-<?= htmlspecialchars($normalized_listing_id) ?>" 
+                    style="margin:0 0 1rem;color:var(--accent-light);font-size:1.8rem"
+                    data-price="<?= htmlspecialchars($r['L_SystemPrice'] ?? 0) ?>"><?= htmlspecialchars($price) ?></h2>
                 <?php if ($price_per_sqft): ?>
                   <p style="margin:-0.5rem 0 1rem;color:var(--muted);font-size:0.9rem"><?= htmlspecialchars($price_per_sqft) ?></p>
                 <?php endif; ?>
                 
-                <p style="font-size:1.1rem;color:#c0cae0;margin:0 0 1.5rem"><?= $full_addr ?></p>
+                <p id="modal-desc-<?= htmlspecialchars($normalized_listing_id) ?>" 
+                   style="font-size:1.1rem;color:#c0cae0;margin:0 0 1.5rem"
+                   data-address="<?= htmlspecialchars($full_addr) ?>"><?= $full_addr ?></p>
                 
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1rem;margin-bottom:1.5rem">
-                  <div style="background:rgba(50,70,120,0.2);padding:1rem;border-radius:12px;text-align:center">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1rem;margin-bottom:1.5rem" 
+                     role="list"
+                     aria-label="Property specifications">
+                  <div style="background:rgba(50,70,120,0.2);padding:1rem;border-radius:12px;text-align:center" 
+                       role="listitem"
+                       data-beds="<?= $beds ?? 0 ?>">
                     <div style="font-size:1.5rem;font-weight:700;color:var(--accent-light);margin:0.5rem 0"><?= $beds !== null ? $beds : '—' ?></div>
                     <div style="font-size:0.8rem;color:var(--muted)">Bedrooms</div>
                   </div>
-                  <div style="background:rgba(50,70,120,0.2);padding:1rem;border-radius:12px;text-align:center">
+                  <div style="background:rgba(50,70,120,0.2);padding:1rem;border-radius:12px;text-align:center" 
+                       role="listitem"
+                       data-baths="<?= $baths ?? 0 ?>">
                     <div style="font-size:1.5rem;font-weight:700;color:var(--accent-light);margin:0.5rem 0"><?= $baths !== null ? rtrim(rtrim(number_format($baths,1), '0'),'.') : '—' ?></div>
                     <div style="font-size:0.8rem;color:var(--muted)">Bathrooms</div>
                   </div>
-                  <div style="background:rgba(50,70,120,0.2);padding:1rem;border-radius:12px;text-align:center">
+                  <div style="background:rgba(50,70,120,0.2);padding:1rem;border-radius:12px;text-align:center" 
+                       role="listitem"
+                       data-sqft="<?= $sqft ?? 0 ?>">
                     <div style="font-size:1.5rem;font-weight:700;color:var(--accent-light);margin:0.5rem 0"><?= $sqft ? number_format($sqft) : '—' ?></div>
                     <div style="font-size:0.8rem;color:var(--muted)">Square Feet</div>
                   </div>
@@ -2020,22 +2046,14 @@ function all_photos($json) {
               $rec_sqft = $rec['SqFt'] !== null ? (int)$rec['SqFt'] : null;
               $rec_price = money($rec['L_SystemPrice'] ?? 0);
               $rec_price_per_sqft = ($rec_sqft && $rec['L_SystemPrice']) ? money($rec['L_SystemPrice'] / $rec_sqft) . '/ft²' : null;
-              // Normalize recommendation ID and favorites for consistent comparison
-              $normalized_rec_id = (string)trim($rec_id);
-              $normalized_favorites = array_map(function($id) {
-                return (string)trim($id);
-              }, $_SESSION['favorites']);
-              $rec_is_fav = in_array($normalized_rec_id, $normalized_favorites, true);
             ?>
               <div class="rec-card" onclick="openModal('<?= $rec_id ?>')">
                 <div class="rec-image" style="background-image: url('<?= $rec_photo ?: 'https://via.placeholder.com/300x200?text=No+Image' ?>')">
-                  <button class="fav-btn <?= $rec_is_fav ? 'active' : '' ?>" 
+                  <button class="save-btn" 
                           data-listing-id="<?= htmlspecialchars($rec_id) ?>"
-                          onclick="event.stopPropagation(); toggleFavorite('<?= htmlspecialchars($rec_id) ?>', this, event)"
-                          title="<?= $rec_is_fav ? 'Remove from favorites' : 'Add to favorites' ?>">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="<?= $rec_is_fav ? 'currentColor' : 'none' ?>" stroke="currentColor" stroke-width="2">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
+                          onclick="event.stopPropagation(); toggleSave(this)"
+                          title="Save this property">
+                    Save
                   </button>
                 </div>
                 <div class="rec-content">
@@ -2265,197 +2283,122 @@ function all_photos($json) {
       document.body.style.overflow = '';
     }
 
-    // Favorites Toggle Function (AJAX)
-    // Track pending requests to prevent double-clicks
-    const pendingFavoriteToggles = new Set();
-    
-    function toggleFavorite(listingId, buttonElement, event) {
-      // Prevent default behavior if event is provided
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+    // Save Properties (localStorage)
+    function toggleSave(listingId, button) {
+      let saved = JSON.parse(localStorage.getItem('savedProperties') || '[]');
+      const index = saved.indexOf(listingId);
       
-      // Normalize listing ID (trim whitespace, ensure string)
-      listingId = String(listingId).trim();
-      
-      // Prevent double-clicks and rapid toggles
-      if (pendingFavoriteToggles.has(listingId)) {
-        console.log('Toggle already in progress for:', listingId);
-        return;
-      }
-      
-      // Get current state from the button
-      const isActive = buttonElement.classList.contains('active');
-      const svg = buttonElement.querySelector('svg');
-      const path = svg ? svg.querySelector('path') : null;
-      
-      // Mark as pending
-      pendingFavoriteToggles.add(listingId);
-      
-      // Optimistically update UI
-      if (isActive) {
-        buttonElement.classList.remove('active');
-        if (path) path.setAttribute('fill', 'none');
-        buttonElement.title = 'Add to favorites';
+      if (index > -1) {
+        // Remove from saved
+        saved.splice(index, 1);
+        button.classList.remove('saved');
       } else {
-        buttonElement.classList.add('active');
-        if (path) path.setAttribute('fill', 'currentColor');
-        buttonElement.title = 'Remove from favorites';
+        // Add to saved
+        saved.push(listingId);
+        button.classList.add('saved');
       }
       
-      // Build URL with current query parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.set('toggle_fav', listingId);
+      localStorage.setItem('savedProperties', JSON.stringify(saved));
       
-      // Make AJAX request
-      fetch('?' + urlParams.toString(), {
-        method: 'GET',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Toggle favorite response:', data);
-        // Remove from pending set
-        pendingFavoriteToggles.delete(listingId);
-        
-        if (data.success) {
-          // Update all heart buttons for this listing based on server response
-          // Use normalized listing ID for selector - try multiple formats
-          const normalizedId = String(listingId).trim();
-          const allButtons = document.querySelectorAll(`.fav-btn[data-listing-id="${normalizedId}"], .fav-btn[data-listing-id="${CSS.escape(normalizedId)}"]`);
-          
-          console.log(`Found ${allButtons.length} buttons for listing ${normalizedId}`);
-          
-          allButtons.forEach(btn => {
-            // Force update based on server response, not current state
-            if (data.is_favorite) {
-              btn.classList.add('active');
-              const btnSvg = btn.querySelector('svg');
-              const btnPath = btnSvg ? btnSvg.querySelector('path') : null;
-              if (btnPath) btnPath.setAttribute('fill', 'currentColor');
-              btn.title = 'Remove from favorites';
-            } else {
-              btn.classList.remove('active');
-              const btnSvg = btn.querySelector('svg');
-              const btnPath = btnSvg ? btnSvg.querySelector('path') : null;
-              if (btnPath) btnPath.setAttribute('fill', 'none');
-              btn.title = 'Add to favorites';
-            }
-          });
-          
-          // Update favorites count in header if it exists
-          const favCountEl = document.querySelector('.favorites-count');
-          if (favCountEl && data.favorites_count !== undefined) {
-            favCountEl.textContent = data.favorites_count;
-            // Show/hide based on count
-            if (data.favorites_count > 0) {
-              favCountEl.parentElement.style.display = '';
-            } else {
-              favCountEl.parentElement.style.display = 'none';
-            }
-          }
-          
-          // If we're on favorites view and count is 0, redirect
-          if (data.favorites_count === 0 && window.location.search.includes('show_favorites=1')) {
-            setTimeout(() => {
-              const urlParams = new URLSearchParams(window.location.search);
-              urlParams.delete('show_favorites');
-              window.location.href = '?' + urlParams.toString();
-            }, 500);
-          }
+      // Update count
+      const savedCountEl = document.getElementById('saved-count');
+      if (savedCountEl) {
+        savedCountEl.textContent = saved.length;
+      }
+      
+      // Update view saved link
+      const viewSavedLink = document.getElementById('view-saved-link');
+      if (viewSavedLink) {
+        if (saved.length > 0) {
+          viewSavedLink.style.display = 'inline';
+          viewSavedLink.textContent = `View Saved (${saved.length})`;
         } else {
-          // Revert optimistic update on error
-          pendingFavoriteToggles.delete(listingId);
-          if (isActive) {
-            buttonElement.classList.add('active');
-            if (path) path.setAttribute('fill', 'currentColor');
-            buttonElement.title = 'Remove from favorites';
-          } else {
-            buttonElement.classList.remove('active');
-            if (path) path.setAttribute('fill', 'none');
-            buttonElement.title = 'Add to favorites';
-          }
-          console.error('Failed to toggle favorite', data);
+          viewSavedLink.style.display = 'none';
         }
-      })
-      .catch(error => {
-        console.error('Error toggling favorite:', error);
-        // Remove from pending set on error
-        pendingFavoriteToggles.delete(listingId);
-        // Revert optimistic update on error
-        if (isActive) {
-          buttonElement.classList.add('active');
-          if (path) path.setAttribute('fill', 'currentColor');
-          buttonElement.title = 'Remove from favorites';
-        } else {
-          buttonElement.classList.remove('active');
-          if (path) path.setAttribute('fill', 'none');
-          buttonElement.title = 'Add to favorites';
-        }
-      });
+      }
     }
     
-    // Clear All Favorites Function
-    function clearAllFavorites() {
-      if (!confirm('Are you sure you want to clear all favorites? This cannot be undone.')) {
-        return;
+    // Filter cards to show only saved properties
+    function filterSavedCards(savedIds) {
+      const cards = document.querySelectorAll('.card, .list-item');
+      let visibleCount = 0;
+      
+      cards.forEach(card => {
+        const saveBtn = card.querySelector('.save-btn');
+        if (saveBtn) {
+          const listingId = saveBtn.getAttribute('data-listing-id');
+          if (savedIds.includes(listingId)) {
+            card.style.display = '';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        }
+      });
+      
+      // Show message if no saved properties
+      if (visibleCount === 0) {
+        const grid = document.querySelector('.grid, .list');
+        if (grid) {
+          grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted)"><h3>No Saved Properties</h3><p>Click the "Save" button on any property to add it to your saved list.</p></div>';
+        }
+      }
+    }
+    
+    // Initialize saved state on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const saved = JSON.parse(localStorage.getItem('savedProperties') || '[]');
+      
+      // Show/hide view saved links
+      const viewSavedLink = document.getElementById('view-saved-link');
+      const showAllLink = document.getElementById('show-all-link');
+      const urlParams = new URLSearchParams(window.location.search);
+      const isViewingSaved = urlParams.get('saved') === '1';
+      
+      // Set up View Saved link
+      if (viewSavedLink) {
+        viewSavedLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          const params = new URLSearchParams(window.location.search);
+          params.set('saved', '1');
+          window.location.href = '?' + params.toString();
+        });
       }
       
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.set('clear_all_favorites', '1');
+      // Set up Show All link
+      if (showAllLink) {
+        showAllLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          const params = new URLSearchParams(window.location.search);
+          params.delete('saved');
+          window.location.href = '?' + params.toString();
+        });
+      }
       
-      fetch('?' + urlParams.toString(), {
-        method: 'GET',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Remove active class from all favorite buttons
-          document.querySelectorAll('.fav-btn.active').forEach(btn => {
-            btn.classList.remove('active');
-            const btnSvg = btn.querySelector('svg');
-            const btnPath = btnSvg ? btnSvg.querySelector('path') : null;
-            if (btnPath) btnPath.setAttribute('fill', 'none');
-            btn.title = 'Add to favorites';
-          });
+      if (saved.length > 0) {
+        if (isViewingSaved) {
+          if (showAllLink) showAllLink.style.display = 'inline';
+          if (viewSavedLink) viewSavedLink.style.display = 'none';
           
-          // Update favorites count
-          const favCountEl = document.querySelector('.favorites-count');
-          if (favCountEl) {
-            favCountEl.textContent = '0';
-            favCountEl.parentElement.style.display = 'none';
-          }
-          
-          // Redirect if on favorites view
-          if (window.location.search.includes('show_favorites=1')) {
-            const newParams = new URLSearchParams(window.location.search);
-            newParams.delete('show_favorites');
-            newParams.delete('clear_all_favorites');
-            window.location.href = '?' + newParams.toString();
-          } else {
-            // Reload to update UI
-            window.location.reload();
-          }
+          // Filter cards to show only saved
+          filterSavedCards(saved);
         } else {
-          alert('Failed to clear favorites. Please try again.');
+          if (viewSavedLink) {
+            viewSavedLink.style.display = 'inline';
+            viewSavedLink.textContent = `View Saved (${saved.length})`;
+          }
+          if (showAllLink) showAllLink.style.display = 'none';
         }
-      })
-      .catch(error => {
-        console.error('Error clearing favorites:', error);
-        alert('Failed to clear favorites. Please try again.');
+      }
+      
+      // Apply saved class to buttons
+      document.querySelectorAll('.save-btn').forEach(btn => {
+        const listingId = btn.getAttribute('data-listing-id');
+        if (saved.includes(listingId)) {
+          btn.classList.add('saved');
+        }
       });
-    }
+    });
 
     // Image Gallery Navigation
     let currentImageIndex = {};
@@ -2565,6 +2508,7 @@ function all_photos($json) {
       let selectedCityIndex = -1;
       let currentAbortController = null;
       let isCityMode = false; // Track if we're in city autocomplete mode
+      let originalQueryText = ''; // Store full query for parsing all filters
 
       // Helper function to adjust hero padding based on dropdown visibility
       function adjustHeroPadding() {
@@ -2608,6 +2552,7 @@ function all_photos($json) {
     // Show/hide clear button and handle autocomplete
     smartInput.addEventListener('input', function() {
       const value = this.value.trim();
+      originalQueryText = value; // Store full query for parsing all filters
       clearBtn.style.display = value ? 'block' : 'none';
       
       // Cancel any pending requests
@@ -2667,12 +2612,12 @@ function all_photos($json) {
         e.preventDefault();
         const value = smartInput.value.trim();
         
-        if (citySuggestions.length > 0) {
-          // Select city from autocomplete (use first if none selected)
-          const cityToSelect = selectedCityIndex >= 0 
+        if (citySuggestions.length > 0 && originalQueryText) {
+          // Parse the FULL original query to extract all filters (city, price, beds, baths)
+          const selectedCity = selectedCityIndex >= 0 
             ? citySuggestions[selectedCityIndex].city 
             : citySuggestions[0].city;
-          selectCity(cityToSelect);
+          selectCityWithFullQuery(selectedCity, originalQueryText);
         } else if (value.length >= 2) {
           // Perform general search across all fields
           performGeneralSearch(value);
@@ -2814,8 +2759,8 @@ function all_photos($json) {
         autocompleteDropdown.querySelectorAll('.city-suggestion').forEach(item => {
           item.addEventListener('click', function() {
             const city = this.getAttribute('data-city');
-            if (city) {
-              selectCity(city);
+            if (city && originalQueryText) {
+              selectCityWithFullQuery(city, originalQueryText);
             }
           });
         });
@@ -2973,6 +2918,7 @@ function all_photos($json) {
         
         // Parse query to extract city, beds, baths, etc.
         const parsed = parseSearchQuery(query);
+        console.log('Parsed query:', query, 'Result:', parsed);
         
         // Build URL - CLEAR ALL FILTERS first
         const urlParams = new URLSearchParams();
@@ -2988,15 +2934,23 @@ function all_photos($json) {
         if (parsed.baths) {
           urlParams.set('baths', parsed.baths);
         }
-        if (parsed.zip) {
-          urlParams.set('zip', parsed.zip);
-        }
         if (parsed.price_min) {
           urlParams.set('price_min', parsed.price_min);
         }
         if (parsed.price_max) {
           urlParams.set('price_max', parsed.price_max);
         }
+        if (parsed.sqft_min) {
+          urlParams.set('sqft_min', parsed.sqft_min);
+        }
+        if (parsed.sqft_max) {
+          urlParams.set('sqft_max', parsed.sqft_max);
+        }
+        if (parsed.zip) {
+          urlParams.set('zip', parsed.zip);
+        }
+        
+        console.log('URL params:', urlParams.toString());
         
         // If we couldn't parse anything, use general search
         if (!parsed.city && !parsed.beds && !parsed.baths && !parsed.zip && !parsed.price_min && !parsed.price_max) {
@@ -3026,81 +2980,140 @@ function all_photos($json) {
         window.location.href = '?' + urlParams.toString();
       }
       
-      // Parse search query to extract filters
+      // Parse search query to extract filters using NLP
       function parseSearchQuery(query) {
         const result = {};
-        const words = query.split(/\s+/);
-        const textParts = [];
-        let bedsNum = null;
-        let bathsNum = null;
+        const queryLower = query.toLowerCase();
         
-        // Extract beds, baths, and text
-        for (let i = 0; i < words.length; i++) {
-          const word = words[i].toLowerCase();
-          
-          // Check for "X beds" or "X bed"
-          if (/^\d+\s*(bed|beds|br|bedroom|bedrooms)$/i.test(words[i])) {
-            bedsNum = parseInt(words[i].match(/\d+/)[0]);
-            continue;
-          }
-          
-          // Check for "X baths" or "X bath" or "X bathrooms"
-          if (/^\d+\s*(bath|baths|ba|bathroom|bathrooms)$/i.test(words[i])) {
-            bathsNum = parseInt(words[i].match(/\d+/)[0]);
-            continue;
-          }
-          
-          // Check for plain numbers
-          if (/^\d+$/.test(words[i])) {
-            const num = parseInt(words[i]);
-            // If it's a small number and we don't have beds yet, assume beds
-            if (num <= 10 && bedsNum === null) {
-              bedsNum = num;
-              continue;
+        console.log('[NLP] Parsing query:', query);
+        
+        // Enhanced price parsing with NLP
+        // Match patterns like "under 100 million", "less than 4m", "below 800k"
+        // FIXED: Require space before word units (million, thousand) but allow no space for letter units (m, k)
+        const priceMaxPatterns = [
+          // Match "million" or "thousand" with required space
+          /(?:under|below|less\s+than|max|maximum|up\s+to)\s+\$?\s*(\d+(?:\.\d+)?)\s+(million|thousand)/i,
+          // Match "mil" "m" "k" with optional space
+          /(?:under|below|less\s+than|max|maximum|up\s+to)\s+\$?\s*(\d+(?:\.\d+)?)\s*(mil|m|k)/i,
+          // Match just number with no unit
+          /(?:under|below|less\s+than|max|maximum|up\s+to)\s+\$?\s*(\d+(?:\.\d+)?)/i
+        ];
+        
+        for (const pattern of priceMaxPatterns) {
+          const match = queryLower.match(pattern);
+          if (match) {
+            let price = parseFloat(match[1]);
+            const unit = (match[2] || '').toLowerCase();
+            
+            console.log('[NLP] Price max match:', match[0], '| Number:', match[1], '| Unit:', unit);
+            
+            if (unit === 'million') {
+              price *= 1000000;
+            } else if (unit === 'mil' || unit === 'm') {
+              price *= 1000000;
+            } else if (unit === 'thousand' || unit === 'k') {
+              price *= 1000;
             }
-            // If we have beds but not baths and it's reasonable, assume baths
-            if (bedsNum !== null && bathsNum === null && num >= 1 && num <= 20) {
-              bathsNum = num;
-              continue;
-            }
-            // If it's a larger number, might be price or sqft - skip for now
-            continue;
+            // If no unit specified, assume raw number
+            
+            console.log('[NLP] Calculated price_max:', price);
+            result.price_max = Math.round(price);
+            break;
           }
-          
-          // Check for price indicators
-          if (/^(under|below|max|up\s*to|less\s*than)\s*\$?(\d+[km]?)/i.test(query.substring(query.indexOf(words[i])))) {
-            const match = query.match(/(under|below|max|up\s*to|less\s*than)\s*\$?(\d+)([km]?)/i);
-            if (match) {
-              let price = parseInt(match[2]);
-              if (match[3].toLowerCase() === 'k') price *= 1000;
-              if (match[3].toLowerCase() === 'm') price *= 1000000;
-              result.price_max = price;
-              // Skip the price words
-              i += match[0].split(/\s+/).length - 1;
-              continue;
-            }
-          }
-          
-          // Check for ZIP code (5 digits)
-          if (/^\d{5}$/.test(words[i])) {
-            result.zip = words[i];
-            continue;
-          }
-          
-          // Otherwise, it's text (likely city name)
-          textParts.push(words[i]);
         }
         
-        // Join text parts as city
-        if (textParts.length > 0) {
-          result.city = textParts.join(' ');
+        // Match patterns like "over 2 million", "more than 1m", "above 500k"
+        const priceMinPatterns = [
+          // Match "million" or "thousand" with required space
+          /(?:over|above|more\s+than|min|minimum|at\s+least)\s+\$?\s*(\d+(?:\.\d+)?)\s+(million|thousand)/i,
+          // Match "mil" "m" "k" with optional space
+          /(?:over|above|more\s+than|min|minimum|at\s+least)\s+\$?\s*(\d+(?:\.\d+)?)\s*(mil|m|k)/i,
+          // Match just number with no unit
+          /(?:over|above|more\s+than|min|minimum|at\s+least)\s+\$?\s*(\d+(?:\.\d+)?)/i
+        ];
+        
+        for (const pattern of priceMinPatterns) {
+          const match = queryLower.match(pattern);
+          if (match) {
+            let price = parseFloat(match[1]);
+            const unit = (match[2] || '').toLowerCase();
+            
+            console.log('[NLP] Price min match:', match[0], '| Number:', match[1], '| Unit:', unit);
+            
+            if (unit === 'million') {
+              price *= 1000000;
+            } else if (unit === 'mil' || unit === 'm') {
+              price *= 1000000;
+            } else if (unit === 'thousand' || unit === 'k') {
+              price *= 1000;
+            }
+            
+            console.log('[NLP] Calculated price_min:', price);
+            result.price_min = Math.round(price);
+            break;
+          }
         }
         
-        if (bedsNum !== null) {
-          result.beds = bedsNum;
+        // Price range: "500k to 1m", "between 1 million and 2 million"
+        const rangeMatch = queryLower.match(/(?:between\s+)?\$?\s*(\d+(?:\.\d+)?)\s*(million|mil|m|thousand|k)?\s+(?:to|and|-)\s+\$?\s*(\d+(?:\.\d+)?)\s*(million|mil|m|thousand|k)?/i);
+        if (rangeMatch) {
+          let min = parseFloat(rangeMatch[1]);
+          let max = parseFloat(rangeMatch[3]);
+          const minUnit = (rangeMatch[2] || '').toLowerCase();
+          const maxUnit = (rangeMatch[4] || '').toLowerCase();
+          
+          if (minUnit === 'million' || minUnit === 'mil' || minUnit === 'm') min *= 1000000;
+          else if (minUnit === 'thousand' || minUnit === 'k') min *= 1000;
+          
+          if (maxUnit === 'million' || maxUnit === 'mil' || maxUnit === 'm') max *= 1000000;
+          else if (maxUnit === 'thousand' || maxUnit === 'k') max *= 1000;
+          
+          result.price_min = Math.round(min);
+          result.price_max = Math.round(max);
+          console.log('[NLP] Price range:', result.price_min, '-', result.price_max);
         }
-        if (bathsNum !== null) {
-          result.baths = bathsNum;
+        
+        // Bedrooms: "3 bed", "4 bedroom", "5 br"
+        const bedsMatch = queryLower.match(/(\d+)\s*(?:bed|bedroom|br|beds|bedrooms)/i);
+        if (bedsMatch) {
+          result.beds = parseInt(bedsMatch[1]);
+        }
+        
+        // Bathrooms: "2 bath", "2.5 bathroom", "3 ba"
+        const bathsMatch = queryLower.match(/(\d+(?:\.\d+)?)\s*(?:bath|bathroom|ba|baths|bathrooms)/i);
+        if (bathsMatch) {
+          result.baths = parseFloat(bathsMatch[1]);
+        }
+        
+        // Square feet: "2000 sqft", "1500 square feet", "3000+ sq ft"
+        const sqftMatch = queryLower.match(/(\d+)\+?\s*(?:sqft|sq\s*ft|square\s*feet)/i);
+        if (sqftMatch) {
+          result.sqft_min = parseInt(sqftMatch[1]);
+        }
+        
+        // ZIP code: 5 digits
+        const zipMatch = query.match(/\b(\d{5})\b/);
+        if (zipMatch) {
+          result.zip = zipMatch[1];
+        }
+        
+        // City extraction - remove all matched patterns and get remaining text
+        let cityText = query;
+        
+        // Remove price patterns
+        cityText = cityText.replace(/(?:under|below|less\s+than|over|above|more\s+than|between|max|min|maximum|minimum|at\s+least|up\s+to)\s+\$?\s*\d+(?:\.\d+)?\s*(?:million|mil|m|thousand|k)?(?:\s+(?:to|and|-)\s+\$?\s*\d+(?:\.\d+)?\s*(?:million|mil|m|thousand|k)?)?/gi, '');
+        
+        // Remove bed/bath/sqft patterns
+        cityText = cityText.replace(/\d+(?:\.\d+)?\s*(?:bed|bedroom|br|beds|bedrooms|bath|bathroom|ba|baths|bathrooms|sqft|sq\s*ft|square\s*feet)/gi, '');
+        
+        // Remove common words
+        cityText = cityText.replace(/\b(?:homes|home|house|houses|property|properties|in|with|and|or|the|for|sale)\b/gi, '');
+        
+        // Clean up and extract city
+        cityText = cityText.trim().replace(/\s+/g, ' ');
+        
+        if (cityText.length > 2) {
+          result.city = cityText;
         }
         
         return result;
@@ -3135,9 +3148,72 @@ function all_photos($json) {
         window.location.href = '?' + urlParams.toString();
       }
 
-      // Select a city and filter by city only
+      // Select a city and parse the full query to extract ALL filters
+      function selectCityWithFullQuery(selectedCity, fullQuery) {
+        // Hide dropdown
+        autocompleteDropdown.style.display = 'none';
+        citySuggestions = [];
+        isCityMode = false;
+        
+        // Parse the FULL query to extract all filters (price, beds, baths, etc.)
+        const parsed = parseSearchQuery(fullQuery);
+        console.log('Full query parsed:', fullQuery, 'Result:', parsed);
+        
+        // Build URL with ALL parsed filters
+        const urlParams = new URLSearchParams();
+        urlParams.set('page', '1');
+        
+        // Use the selected city (not the parsed one, since user clicked on this specific city)
+        urlParams.set('city', selectedCity);
+        
+        // Apply all other parsed filters
+        if (parsed.beds) {
+          urlParams.set('beds', parsed.beds);
+        }
+        if (parsed.baths) {
+          urlParams.set('baths', parsed.baths);
+        }
+        if (parsed.price_min) {
+          urlParams.set('price_min', parsed.price_min);
+        }
+        if (parsed.price_max) {
+          urlParams.set('price_max', parsed.price_max);
+        }
+        if (parsed.sqft_min) {
+          urlParams.set('sqft_min', parsed.sqft_min);
+        }
+        if (parsed.sqft_max) {
+          urlParams.set('sqft_max', parsed.sqft_max);
+        }
+        if (parsed.zip) {
+          urlParams.set('zip', parsed.zip);
+        }
+        
+        console.log('Applying filters:', urlParams.toString());
+        
+        // Clear search input
+        smartInput.value = '';
+        
+        // Navigate to filtered results
+        window.location.href = '?' + urlParams.toString();
+      }
+
+      // Select a city and filter by city only (legacy - keeping for backwards compatibility)
       function selectCity(city) {
         selectSuggestion({ city: city });
+      }
+
+      // Parse price from various formats
+      function parsePrice(str) {
+        str = str.toLowerCase().trim().replace(/[\$,\s]/g, '');
+        
+        if (str.includes('k')) {
+          return Math.round(parseFloat(str.replace('k', '')) * 1000);
+        }
+        if (str.includes('m') || str.includes('million')) {
+          return Math.round(parseFloat(str.replace('m', '').replace('million', '')) * 1000000);
+        }
+        return parseInt(str);
       }
 
       // NLP parsing removed - city autocomplete now directly performs search

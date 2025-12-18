@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>California Property Database API - Documentation for AI Agents</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 { color: #2563eb; border-bottom: 3px solid #2563eb; padding-bottom: 10px; }
+        h2 { color: #1e40af; margin-top: 30px; }
+        code { background: #f1f5f9; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        .endpoint { background: #dbeafe; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0; }
+        .example { background: #f0fdf4; padding: 15px; border-left: 4px solid #16a34a; margin: 15px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { text-align: left; padding: 10px; border: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 600; }
+        .important { background: #fef3c7; padding: 10px; border-left: 4px solid #f59e0b; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <h1>California Real Estate Property Database API</h1>
+    <p><strong>Live MLS Data</strong> | Updated Hourly | 1,000+ California Properties</p>
+    
+    <div class="important">
+        <strong>📌 For AI Agents:</strong> This API provides real-time access to California MLS property listings. Use it to answer user questions about real estate properties, market statistics, and property searches.
+    </div>
+
+    <div class="endpoint">
+        <strong>API Endpoint:</strong> <code>https://akbar.califorsale.org/api/calibot_query.php</code><br>
+        <strong>Method:</strong> POST<br>
+        <strong>Content-Type:</strong> application/json
+    </div>
+
+    <h2>Available Actions</h2>
+
+    <h3>1. Search Properties</h3>
+    <p>Find properties matching specific criteria (city, price range, bedrooms, bathrooms, square footage).</p>
+    
+    <div class="example">
+        <strong>Example Request:</strong>
+        <pre>{
+  "action": "search",
+  "params": {
+    "city": "Los Angeles",
+    "price_max": 800000,
+    "beds": 3,
+    "baths": 2,
+    "sqft_min": 1500,
+    "limit": 10
+  }
+}</pre>
+        <strong>Example Response:</strong>
+        <pre>{
+  "success": true,
+  "count": 10,
+  "properties": [
+    {
+      "listing_id": "123456789",
+      "address": "123 Main St, Los Angeles, CA 90001",
+      "price": 750000,
+      "beds": 3,
+      "baths": 2.5,
+      "sqft": 1800,
+      "city": "Los Angeles",
+      "zip": "90001",
+      "description": "Beautiful single family home..."
+    }
+  ]
+}</pre>
+    </div>
+
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>city</td>
+            <td>string</td>
+            <td>Filter by city name (e.g., "Los Angeles", "San Diego", "San Francisco")</td>
+        </tr>
+        <tr>
+            <td>price_min</td>
+            <td>number</td>
+            <td>Minimum price in dollars</td>
+        </tr>
+        <tr>
+            <td>price_max</td>
+            <td>number</td>
+            <td>Maximum price in dollars</td>
+        </tr>
+        <tr>
+            <td>beds</td>
+            <td>number</td>
+            <td>Minimum number of bedrooms</td>
+        </tr>
+        <tr>
+            <td>baths</td>
+            <td>number</td>
+            <td>Minimum number of bathrooms</td>
+        </tr>
+        <tr>
+            <td>sqft_min</td>
+            <td>number</td>
+            <td>Minimum square footage</td>
+        </tr>
+        <tr>
+            <td>sqft_max</td>
+            <td>number</td>
+            <td>Maximum square footage</td>
+        </tr>
+        <tr>
+            <td>limit</td>
+            <td>number</td>
+            <td>Maximum results to return (default: 20, max: 100)</td>
+        </tr>
+    </table>
+
+    <h3>2. Get Market Statistics</h3>
+    <p>Retrieve overall market statistics across all California properties.</p>
+    
+    <div class="example">
+        <strong>Example Request:</strong>
+        <pre>{
+  "action": "stats",
+  "params": {}
+}</pre>
+        <strong>Example Response:</strong>
+        <pre>{
+  "success": true,
+  "stats": {
+    "total_properties": 1247,
+    "avg_price": 1250000,
+    "median_price": 850000,
+    "min_price": 200000,
+    "max_price": 45000000,
+    "avg_beds": 3.8,
+    "avg_baths": 2.9,
+    "avg_sqft": 2450
+  }
+}</pre>
+    </div>
+
+    <h3>3. Get City Statistics</h3>
+    <p>Get aggregated statistics for a specific city.</p>
+    
+    <div class="example">
+        <strong>Example Request:</strong>
+        <pre>{
+  "action": "city_stats",
+  "params": {
+    "city": "Los Angeles"
+  }
+}</pre>
+        <strong>Example Response:</strong>
+        <pre>{
+  "success": true,
+  "city": "Los Angeles",
+  "stats": {
+    "total_properties": 345,
+    "avg_price": 1450000,
+    "median_price": 950000,
+    "min_price": 350000,
+    "max_price": 28000000,
+    "avg_beds": 4.1,
+    "avg_baths": 3.2,
+    "avg_sqft": 2780
+  }
+}</pre>
+    </div>
+
+    <h3>4. Get Property Details</h3>
+    <p>Retrieve full details for a specific property by listing ID.</p>
+    
+    <div class="example">
+        <strong>Example Request:</strong>
+        <pre>{
+  "action": "property_details",
+  "params": {
+    "listing_id": "123456789"
+  }
+}</pre>
+        <strong>Example Response:</strong>
+        <pre>{
+  "success": true,
+  "property": {
+    "listing_id": "123456789",
+    "address": "123 Main St",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zip": "90001",
+    "price": 750000,
+    "beds": 3,
+    "baths": 2.5,
+    "sqft": 1800,
+    "lot_size": 5000,
+    "year_built": 2010,
+    "description": "Beautiful single family home with modern amenities...",
+    "property_type": "Single Family Residence",
+    "status": "Active"
+  }
+}</pre>
+    </div>
+
+    <h2>Common Use Cases for AI Agents</h2>
+
+    <h3>Example Queries to Answer</h3>
+    <ul>
+        <li><strong>"Show me 3-bedroom homes in San Diego under $800k"</strong><br>
+            Action: search, params: {city: "San Diego", beds: 3, price_max: 800000}</li>
+        
+        <li><strong>"What's the average home price in Los Angeles?"</strong><br>
+            Action: city_stats, params: {city: "Los Angeles"}</li>
+        
+        <li><strong>"Find luxury homes over 3000 sqft"</strong><br>
+            Action: search, params: {sqft_min: 3000, price_min: 1000000}</li>
+        
+        <li><strong>"Tell me about listing 123456789"</strong><br>
+            Action: property_details, params: {listing_id: "123456789"}</li>
+        
+        <li><strong>"What's the real estate market like overall?"</strong><br>
+            Action: stats, params: {}</li>
+    </ul>
+
+    <h2>Major California Cities Available</h2>
+    <p>Los Angeles, San Diego, San Francisco, San Jose, Beverly Hills, Malibu, Santa Monica, Pasadena, Laguna Beach, Newport Beach, Palo Alto, Irvine, Santa Barbara, La Jolla, and many more.</p>
+
+    <h2>Property Listing ID Format and Structure</h2>
+    <div class="important">
+        <strong>📋 Understanding Listing IDs:</strong>
+        <ul>
+            <li><strong>Format:</strong> Listing IDs are typically 9-11 digit numeric strings (e.g., "123456789", "24052300")</li>
+            <li><strong>Database Field:</strong> Stored as <code>L_ListingID</code> in the database</li>
+            <li><strong>Uniqueness:</strong> Each listing ID is unique and comes from the MLS system</li>
+            <li><strong>URL Access:</strong> Properties can be viewed at <code>https://akbar.califorsale.org/?view_property={listing_id}</code></li>
+            <li><strong>Modal Access:</strong> Click any property card or use <code>#modal-{listing_id}</code> anchor</li>
+        </ul>
+    </div>
+
+    <h2>Database Schema and Field Mapping</h2>
+    <p>Understanding the actual database structure helps with accurate data retrieval:</p>
+    
+    <table>
+        <tr>
+            <th>Database Field</th>
+            <th>Display Name</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td><code>L_ListingID</code></td>
+            <td>Listing ID</td>
+            <td>VARCHAR</td>
+            <td>Unique MLS listing identifier (primary key)</td>
+        </tr>
+        <tr>
+            <td><code>L_Address</code></td>
+            <td>Street Address</td>
+            <td>VARCHAR</td>
+            <td>Street address (e.g., "123 Main St")</td>
+        </tr>
+        <tr>
+            <td><code>L_City</code></td>
+            <td>City</td>
+            <td>VARCHAR</td>
+            <td>City name (e.g., "Los Angeles")</td>
+        </tr>
+        <tr>
+            <td><code>L_Zip</code></td>
+            <td>ZIP Code</td>
+            <td>VARCHAR</td>
+            <td>5-digit ZIP code</td>
+        </tr>
+        <tr>
+            <td><code>L_SystemPrice</code></td>
+            <td>Price</td>
+            <td>DECIMAL</td>
+            <td>Property price in USD (e.g., 750000 = $750,000)</td>
+        </tr>
+        <tr>
+            <td><code>L_Keyword2</code></td>
+            <td>Bedrooms</td>
+            <td>VARCHAR/INT</td>
+            <td>Number of bedrooms (cast as UNSIGNED for queries)</td>
+        </tr>
+        <tr>
+            <td><code>LM_Dec_3</code></td>
+            <td>Bathrooms</td>
+            <td>DECIMAL</td>
+            <td>Number of bathrooms (can be decimal: 2.5 = 2 full + 1 half)</td>
+        </tr>
+        <tr>
+            <td><code>LM_Int2_3</code></td>
+            <td>Square Feet</td>
+            <td>INT</td>
+            <td>Living area in square feet</td>
+        </tr>
+        <tr>
+            <td><code>L_Photos</code></td>
+            <td>Photos</td>
+            <td>TEXT</td>
+            <td>Comma-separated list of photo URLs</td>
+        </tr>
+    </table>
+
+    <h2>Property Data Structure on Website</h2>
+    <p>Each property on the website includes machine-readable structured data:</p>
+    
+    <div class="example">
+        <strong>Schema.org JSON-LD Format:</strong>
+        <pre>{
+  "@context": "https://schema.org",
+  "@type": "RealEstateListing",
+  "identifier": "123456789",
+  "name": "Property at 123 Main St, Los Angeles, CA 90001",
+  "url": "https://akbar.califorsale.org/#listing-123456789",
+  "price": "750000",
+  "priceCurrency": "USD",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "123 Main St",
+    "addressLocality": "Los Angeles",
+    "addressRegion": "CA",
+    "postalCode": "90001"
+  },
+  "numberOfRooms": "3",
+  "numberOfBathroomsTotal": "2.5",
+  "floorSize": {
+    "@type": "QuantitativeValue",
+    "value": "1800",
+    "unitCode": "SQF"
+  },
+  "image": "https://image.url/photo.jpg"
+}</pre>
+    </div>
+
+    <h2>HTML Data Attributes for RAG Systems</h2>
+    <p>Property cards include data attributes for easy parsing:</p>
+    <ul>
+        <li><code>data-property-id</code> - The listing ID</li>
+        <li><code>data-property-price</code> - Numeric price in USD</li>
+        <li><code>data-property-address</code> - Full formatted address</li>
+        <li><code>data-property-beds</code> - Number of bedrooms</li>
+        <li><code>data-property-baths</code> - Number of bathrooms</li>
+        <li><code>data-property-sqft</code> - Square footage</li>
+    </ul>
+
+    <h2>Accessing Specific Properties</h2>
+    <div class="example">
+        <strong>When user asks about a specific listing ID:</strong>
+        <ol>
+            <li>Direct link: <code>https://akbar.califorsale.org/?view_property=123456789</code></li>
+            <li>Modal anchor: <code>https://akbar.califorsale.org/#modal-123456789</code></li>
+            <li>API call: Use <code>property_details</code> action with the listing ID</li>
+        </ol>
+        <strong>Example: "Tell me about listing 24052300"</strong>
+        <ul>
+            <li>Extract listing ID: <code>24052300</code></li>
+            <li>Make API call with action: <code>property_details</code></li>
+            <li>Or provide direct URL: <code>https://akbar.califorsale.org/?view_property=24052300</code></li>
+        </ul>
+    </div>
+
+    <h2>Important Notes</h2>
+    <ul>
+        <li>All prices are in USD</li>
+        <li>Square footage is in square feet</li>
+        <li>Data is updated hourly from MLS feeds</li>
+        <li>City names are case-insensitive</li>
+        <li>Partial matches are supported for city names</li>
+        <li>All searches return active listings only</li>
+    </ul>
+
+    <div class="important">
+        <strong>🔑 For AI Integration:</strong> 
+        <ul>
+            <li>When a user asks about California real estate, parse their natural language request and extract parameters (city, price, beds, baths, sqft)</li>
+            <li>Make a POST request to the API endpoint with the appropriate action and parameters</li>
+            <li>Present the results conversationally with context</li>
+            <li><strong>For listing IDs:</strong> Always use the <code>property_details</code> action to get accurate information about a specific property</li>
+            <li><strong>URL format:</strong> Share links as <code>https://akbar.califorsale.org/?view_property={listing_id}</code> for direct access</li>
+            <li><strong>Data accuracy:</strong> Rely on the API response data, not scraped HTML, for property details</li>
+        </ul>
+    </div>
+
+    <h2>Common AI Agent Mistakes to Avoid</h2>
+    <div class="important">
+        <strong>⚠️ Important:</strong>
+        <ul>
+            <li><strong>DON'T confuse listing IDs with other numbers:</strong> Listing IDs are 9-11 digits (e.g., "24052300"), not prices or square footage</li>
+            <li><strong>DON'T mix up database fields:</strong> Use <code>L_ListingID</code> for IDs, <code>L_SystemPrice</code> for prices, <code>L_Keyword2</code> for beds</li>
+            <li><strong>DON'T assume field formats:</strong> Baths can be decimals (2.5), bedrooms are integers, prices are raw numbers without currency symbols</li>
+            <li><strong>DO validate listing IDs:</strong> They should be numeric strings, typically 9-11 characters long</li>
+            <li><strong>DO use the API:</strong> Always use the <code>property_details</code> API action for accurate data instead of parsing HTML</li>
+        </ul>
+    </div>
+
+    <h2>Error Handling</h2>
+    <p>If the request fails, the API returns:</p>
+    <pre>{
+  "success": false,
+  "error": "Error message describing what went wrong"
+}</pre>
+
+    <hr>
+    <p style="text-align: center; color: #64748b; margin-top: 40px;">
+        <small>California Property Database API v1.0 | © 2025 CaliForsale.org | For AI Agent Integration</small>
+    </p>
+</body>
+</html>
