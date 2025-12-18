@@ -62,7 +62,6 @@ The California Property Finder is a production-ready real estate search platform
 - Accurate listing ID lookups and property details
 
 ### 5. Google Maps
-- **API Key**: Dylan's working key (AIzaSyDUDANvW9dJmVEVS1BAHDCi9iT44sQocqs)
 - Multiple map types: Roadmap, Satellite, Hybrid
 - Geocoding for property addresses
 - Interactive markers and modals
